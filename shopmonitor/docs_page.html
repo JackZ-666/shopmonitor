@@ -1,0 +1,295 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.png" type="image/png">
+<title>接口文档 · 选品监控</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--text:#222;--muted:#8a94a3;--line:#eef1f5;--accent:#123c6e;--accent2:#1b5bbf;--ok:#0a7a3d;--warn:#c05621;--top-bg:#123c6e;--top-text:#fff}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  .top{background:var(--top-bg);color:var(--top-text);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .top h1{font-size:18px}
+  .top .links a{color:#fff;opacity:.9;margin-left:14px;text-decoration:none;font-size:13px}
+  .wrap{max-width:1000px;margin:20px auto;padding:0 16px}
+  .card{background:var(--card);border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px}
+  h2{font-size:16px;color:var(--accent);border-left:3px solid #f0a020;padding-left:8px;margin-bottom:12px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .step{background:#f7f9fc;border-radius:8px;padding:12px}
+  .step .n{font-size:20px;font-weight:700;color:var(--accent2)}
+  .step .t{font-weight:600;margin:4px 0}
+  .step .d{font-size:12px;color:var(--muted)}
+  details{background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+  summary{font-weight:600;cursor:pointer;color:var(--accent)}
+  details table{margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:500;white-space:nowrap}
+  code{background:#f0f2f5;border-radius:4px;padding:1px 5px;font-size:12px}
+  .m{display:inline-block;min-width:46px;text-align:center;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;color:#fff}
+  .m-get{background:#0a7a3d}.m-post{background:#b26a00}.m-delete{background:#c0392b}.m-put{background:#1b5bbf}
+  .api{margin-bottom:14px;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .api .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .api .summary{font-weight:600;font-size:14px}
+  .api .desc{color:var(--muted);font-size:12px;margin:6px 0}
+  .api .paths{font-size:12px;color:var(--accent2)}
+  .api .paths div{margin:2px 0}
+  .api table{margin-top:6px}
+  .search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-bottom:14px}
+  .tag{margin:18px 0 8px;font-size:15px;font-weight:700;color:var(--accent)}
+  .note{font-size:12px;color:var(--muted);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>选品监控 · 接口文档</h1>
+  <div class="links">
+    <a href="/">返回面板</a><a href="/大屏" target="_blank">数据大屏</a><a href="/docs" target="_blank">开发者 Swagger</a>
+  </div>
+</div>
+<div class="wrap">
+
+  <div class="card">
+    <h2>快速开始（3 步）</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div class="t">启动服务</div><div class="d">双击「启动.bat」，打开 http://127.0.0.1:8010</div></div>
+      <div class="step"><div class="n">2</div><div class="t">配平台数据</div><div class="d">见下方「电商配置引导」；不配也能用演示数据 + UUMit 免费数据</div></div>
+      <div class="step"><div class="n">3</div><div class="t">开始监控</div><div class="d">面板添加关注 → 运行巡检 → 看大盘/热搜/日报/告警</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>电商配置引导（想点亮真实数据看这里）</h2>
+    <details open>
+      <summary>① 平台数据配置（三选一）</summary>
+      <table>
+        <tr><th>方式</th><th>操作</th><th>配置文件.env 里的项</th></tr>
+        <tr><td><b>方式一：UUMit 免费数据</b><br>（零配置，推荐先用）</td><td>大盘/热搜/联想词自动可用，0 扣费</td><td>UUMIT_SKILL_DIR（留空自动探测）</td></tr>
+        <tr><td><b>方式二：自定义 JSON 数据源</b><br>（最省事，10 分钟）</td><td><a href="/api/v1/配置/数据源模板">下载数据源模板</a> → 把商品榜单按模板填好 → 保存为 json 文件/接口地址 → 填到下面任一平台项 → 重启</td><td>SHOPMONITOR_JD_RANK_URL / _PDD_ / _DOUYIN_ / _TAOBAO_ / _SHOPEE_ / _AMAZON_ / _ALIEXPRESS_RANK_URL</td></tr>
+        <tr><td><b>方式三：官方 API</b><br>（合规，需申请）</td><td>京东联盟 union.jd.com（需开通 goods.query 权限）；淘宝登录 Cookie；拼多多/抖音开放平台（需商家资质）</td><td>JD_UNION_APP_KEY / JD_UNION_SECRET_KEY；TAOBAO_COOKIE</td></tr>
+      </table>
+    </details>
+    <details>
+      <summary>⑥ 官方开放平台凭证（国内：抖音商城/淘宝/拼多多/1688/快手；跨境：TikTok Shop/Amazon/Shopee/AliExpress）</summary>
+      <table>
+        <tr><th>平台</th><th>申请入口</th><th>要填的配置项</th></tr>
+        <tr><td>抖音商城（抖店）</td><td>op.jinritemai.com（需企业认证）</td><td>DOUYIN_MALL_APP_ID / DOUYIN_MALL_SECRET</td></tr>
+        <tr><td>淘宝开放平台</td><td>open.taobao.com</td><td>TAOBAO_APP_KEY / TAOBAO_APP_SECRET</td></tr>
+        <tr><td>拼多多开放平台</td><td>open.pinduoduo.com</td><td>PDD_CLIENT_ID / PDD_CLIENT_SECRET</td></tr>
+        <tr><td>1688 开放平台</td><td>open.1688.com</td><td>ALIBABA_APP_KEY / ALIBABA_APP_SECRET</td></tr>
+        <tr><td>快手电商开放平台</td><td>open.kwaixiaodian.com</td><td>KUAISHOU_APP_KEY / KUAISHOU_APP_SECRET</td></tr>
+        <tr><td>TikTok Shop</td><td>partner.tiktokshop.com（TikTok Shop Partner Center 应用，需商家授权）</td><td>TIKTOK_SHOP_APP_KEY / TIKTOK_SHOP_APP_SECRET / TIKTOK_SHOP_ACCESS_TOKEN</td></tr>
+        <tr><td>Amazon PA-API</td><td>webservices.amazon.com/paapi5（需 AWS Key + 联盟 PartnerTag）</td><td>AMAZON_ACCESS_KEY / AMAZON_SECRET_KEY / AMAZON_PARTNER_TAG</td></tr>
+        <tr><td>Shopee 开放平台</td><td>open.shopee.com（应用 Partner Key + 商家授权）</td><td>SHOPEE_PARTNER_ID / SHOPEE_PARTNER_KEY / SHOPEE_ACCESS_TOKEN / SHOPEE_SHOP_ID</td></tr>
+        <tr><td>AliExpress 联盟</td><td>open.aliexpress.com（联盟应用 + 推广者授权）</td><td>ALIEXPRESS_OPEN_APP_KEY / ALIEXPRESS_OPEN_APP_SECRET / ALIEXPRESS_OPEN_ACCESS_TOKEN</td></tr>
+        <tr><td>通用说明</td>'<td>部分接口还需下面的 Token / 扩展参数（在配置中心可填）</td><td>DOUYIN_MALL_ACCESS_TOKEN / ALIBABA_ACCESS_TOKEN / KUAISHOU_ACCESS_TOKEN / TAOBAO_ADZONE_ID</td></tr>
+      </table>
+      <div class="note">凭证填好后在下方「配置中心」保存即生效（自动重启）。官方 API 通常需要企业资质，个人可先用 自定义 JSON 或 UUMit 免费数据。</div>
+    </details>
+    <details>
+      <summary>② AI 选品分析配置（可选）</summary>
+      <table>
+        <tr><th>步骤</th><th>说明</th></tr>
+        <tr><td>1. 申请 Key</td><td>豆包火山方舟 / 智谱 GLM / 通义千问 / DeepSeek 任选（都有免费额度，OpenAI 兼容）</td></tr>
+        <tr><td>2. 填入配置</td><td>配置文件.env：AI_LLM_API_KEY=sk-xxx（BASE_URL / MODEL 留空自动识别）</td></tr>
+        <tr><td>3. 使用</td><td>面板「AI 选品分析」输入关键词一键分析；或 POST /api/v1/ai/选品分析</td></tr>
+      </table>
+    </details>
+    <details>
+      <summary>③ 告警推送配置（可选，自动推送到手机）</summary>
+      <table>
+        <tr><th>步骤</th><th>说明</th></tr>
+        <tr><td>1. 建群机器人</td><td>企业微信 / 钉钉 / 飞书 群里添加「群机器人」，复制 Webhook 地址</td></tr>
+        <tr><td>2. 填入配置</td><td>配置文件.env：SHOPMONITOR_WEBHOOK_URL=https://qyapi.weixin.qq.com/...</td></tr>
+        <tr><td>3. 效果</td><td>降价/缺货/新品上榜等告警 + 每日日报自动推送</td></tr>
+      </table>
+    </details>
+    <details>
+      <summary>④ 套餐配置（免费/Pro/企业）</summary>
+      <table>
+        <tr><th>套餐</th><th>关注数上限</th><th>AI</th><th>配置</th></tr>
+        <tr><td>free</td><td>5</td><td>关</td><td>SHOPMONITOR_PLAN=free（默认）</td></tr>
+        <tr><td>pro</td><td>50</td><td>开</td><td>SHOPMONITOR_PLAN=pro</td></tr>
+        <tr><td>enterprise</td><td>不限</td><td>开</td><td>SHOPMONITOR_PLAN=enterprise</td></tr>
+      </table>
+      <div class="note">改完保存 → 重启服务生效。配置状态可在面板「设置」页查看。</div>
+    </details>
+    <details>
+      <summary>⑤ 数据大屏 & 报告导出</summary>
+      <table>
+        <tr><th>入口</th><th>地址</th></tr>
+        <tr><td>数据大屏（60 秒自动刷新）</td><td>/大屏</td></tr>
+        <tr><td>大盘报告（中/英）</td><td>/api/v1/uumit/报告?fmt=md&lang=zh|en</td></tr>
+        <tr><td>热搜选词报告</td><td>/api/v1/uumit/热搜报告?fmt=md&keyword=手机&lang=zh|en</td></tr>
+        <tr><td>选品对比表</td><td>/api/v1/报告/对比?fmt=md|csv|xlsx&lang=zh|en&platform=mock&product_ids=demo-001</td></tr>
+      </table>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>配置中心（在线直接改，保存后自动生效）</h2>
+    <div style="margin-bottom:12px;padding:12px 14px;border:1px dashed var(--accent2);border-radius:10px;background:rgba(27,91,191,.06)">
+      <b>⚡ 不会配置平台 API？</b> 点「一键启用预置数据」：京东/淘宝/拼多多/抖音/Shopee/Amazon/AliExpress 7 大平台立即显示预置样例数据，全程免配置；有官方凭证后再替换。
+      <button class="btn" style="background:var(--accent);color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;margin-left:8px" onclick="enablePreset()">一键启用预置数据</button>
+      <span class="note" id="presetMsg"></span>
+    </div>
+    <div class="note">改完点「保存配置」，服务自动重启（约 3 秒）后生效。敏感项只显示掩码；清空输入 = 清除该配置。测试按钮可先验证再保存。</div>
+    <div id="cfgForm" style="margin-top:10px">加载中…</div>
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <button class="btn" style="background:var(--accent);color:#fff;border:none;padding:9px 22px;border-radius:6px;cursor:pointer;font-size:14px" onclick="saveCfg()">保存配置</button>
+  <button class="btn" style="background:var(--btn-s);color:var(--text);border:1px solid var(--line);padding:9px 18px;border-radius:6px;cursor:pointer;font-size:14px" onclick="testNotify()" title="用当前填写的 Webhook/邮件/Telegram 配置发送一条测试消息">测试通知</button>
+  <input id="packBase" placeholder="数据包 base 地址，如 https://user.github.io/repo" style="padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-size:13px;width:300px;max-width:100%">
+  <button class="btn" style="background:var(--btn-s);color:var(--text);border:1px solid var(--line);padding:9px 18px;border-radius:6px;cursor:pointer;font-size:14px" onclick="fillPack()" title="把 7 平台数据源一键填为 GitHub Pages 数据包地址">一键填数据包</button>
+  <span class="note" id="cfgMsg"></span>
+</div>
+  </div>
+
+  <div class="card">
+    <h2>接口目录（按功能分组）</h2>
+    <input class="search" id="kw" placeholder="搜索接口：如 大盘 / 热搜 / 监控 / 选品 / AI…">
+    <div id="groups">加载中…</div>
+  </div>
+
+</div>
+<script>
+const CAT_NAMES = {ai:'AI 选品', jd:'京东联盟', cookie:'登录 Cookie', json:'自定义 JSON 数据源', official:'官方开放平台（国内：抖音商城/淘宝/拼多多/1688/快手）', official_global:'官方开放平台（跨境：TikTok/Amazon/Shopee/AliExpress）', push:'告警推送', plan:'套餐'};
+async function loadCfg(){
+  try {
+    const d = await fetch('/api/v1/配置/可配置项').then(r=>r.json());
+    const items = d.items||[];
+    const groups = {};
+    items.forEach(it => (groups[it.category]=groups[it.category]||[]).push(it));
+    document.getElementById('cfgForm').innerHTML = Object.entries(groups).map(([cat, list]) =>
+      `<details ${(cat==='ai'||cat==='json')?'open':''}><summary>${CAT_NAMES[cat]||cat}</summary>` +
+      list.map(it => {
+        let test = '';
+        if (it.key==='AI_LLM_API_KEY') test = '<button class="btn" onclick="testAi()" style="padding:6px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--bg)">测试</button>';
+        else if (it.key.endsWith('_RANK_URL')) test = `<button class="btn" onclick="testSrc('${it.key}')" style="padding:6px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--bg)">测试</button>`;
+        else if (it.key==='SHOPMONITOR_WEBHOOK_URL') test = '<button class="btn" onclick="testHook()" style="padding:6px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--bg)">测试</button>';
+        return `<div style="margin:10px 0"><div style="font-size:13px;font-weight:600">${esc(it.name)}</div>
+          <div style="display:flex;gap:8px;margin-top:4px"><input data-key="${it.key}" type="${it.secret?'password':'text'}" value="${esc(it.value)}" placeholder="${esc(it.hint)}" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px">${test}</div>
+          <div class="note">${esc(it.hint)}</div></div>`;
+      }).join('') + '</details>'
+    ).join('');
+  } catch(e){ document.getElementById('cfgForm').textContent = '配置加载失败'; }
+}
+function cfgMsg(t){ document.getElementById('cfgMsg').textContent = t; }
+async function enablePreset(){
+  document.getElementById('presetMsg').textContent = '启用中…';
+  try {
+    const d = await fetch('/api/v1/配置/启用预置数据', {method:'POST'}).then(r=>r.json());
+    document.getElementById('presetMsg').textContent = (d.ok?'✅ ':'❌ ') + (d.message||'');
+  } catch(e){ document.getElementById('presetMsg').textContent='启用失败：'+e; }
+}
+async function fillPack(){
+  const base = document.getElementById('packBase').value.trim();
+  if (!base) { cfgMsg('请先填写数据包 base 地址'); return; }
+  cfgMsg('填数据包中…');
+  try {
+    const d = await fetch('/api/v1/配置/填数据包?restart=false', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({base_url: base})}).then(r=>r.json());
+    cfgMsg((d.ok?'✅ ':'❌ ') + (d.message||''));
+  } catch(e){ cfgMsg('填数据包失败：'+e); }
+}
+async function testNotify(){
+  const val = k => { const el = document.querySelector('#cfgForm input[data-key="'+k+'"]'); return el ? el.value.trim() : ''; };
+  const body = {
+    webhook_url: val('SHOPMONITOR_WEBHOOK_URL'),
+    email_host: val('ALERT_EMAIL_SMTP_HOST'),
+    email_port: val('ALERT_EMAIL_SMTP_PORT') || 465,
+    email_user: val('ALERT_EMAIL_USER'),
+    email_pass: val('ALERT_EMAIL_PASS'),
+    email_from: val('ALERT_EMAIL_FROM'),
+    email_to: val('ALERT_EMAIL_TO'),
+    telegram_token: val('ALERT_TELEGRAM_BOT_TOKEN'),
+    telegram_chat_id: val('ALERT_TELEGRAM_CHAT_ID')
+  };
+  cfgMsg('发送测试通知中…');
+  try {
+    const d = await fetch('/api/v1/配置/测试通知', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json());
+    const det = d.details || {};
+    const lines = [];
+    if (det.webhook) lines.push('Webhook ' + (det.webhook.ok ? '✅' : '❌ ' + (det.webhook.error||'')));
+    if (det.email) lines.push('邮件 ' + (det.email.ok ? '✅' : '❌ ' + (det.email.error||'')));
+    if (det.telegram) lines.push('Telegram ' + (det.telegram.ok ? '✅' : '❌ ' + (det.telegram.error||'')));
+    cfgMsg((d.ok?'✅ ':'❌ ') + (d.message||'') + (lines.length ? ' ｜ ' + lines.join('；') : ''));
+  } catch(e){ cfgMsg('测试失败：'+e); }
+}
+async function saveCfg(){
+  const inputs = Array.from(document.querySelectorAll('#cfgForm input[data-key]'));
+  const items = inputs.map(i => ({key: i.getAttribute('data-key'), value: i.value}));
+  cfgMsg('保存中…');
+  try {
+    const d = await fetch('/api/v1/配置/保存', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items})}).then(r=>r.json());
+    cfgMsg(d.message || '已保存');
+  } catch(e){ cfgMsg('保存失败：' + e); }
+}
+async function testSrc(key){
+  const input = document.querySelector('#cfgForm input[data-key="'+key+'"]');
+  cfgMsg('测试中…');
+  try {
+    const d = await fetch('/api/v1/配置/测试数据源', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url: input.value.trim()})}).then(r=>r.json());
+    cfgMsg((d.ok?'✅ ':'❌ ') + (d.message||''));
+  } catch(e){ cfgMsg('测试失败：' + e); }
+}
+async function testAi(){
+  const v = k => (document.querySelector('#cfgForm input[data-key="'+k+'"]')||{}).value || '';
+  cfgMsg('测试中…');
+  try {
+    const d = await fetch('/api/v1/配置/测试AI', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({api_key: v('AI_LLM_API_KEY'), base_url: v('AI_LLM_BASE_URL'), model: v('AI_LLM_MODEL')})}).then(r=>r.json());
+    cfgMsg((d.ok?'✅ ':'❌ ') + (d.message||''));
+  } catch(e){ cfgMsg('测试失败：' + e); }
+}
+async function testHook(){
+  const input = document.querySelector('#cfgForm input[data-key="SHOPMONITOR_WEBHOOK_URL"]');
+  cfgMsg('测试中…');
+  try {
+    const d = await fetch('/api/v1/配置/测试Webhook', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url: input.value.trim()})}).then(r=>r.json());
+    cfgMsg((d.ok?'✅ ':'❌ ') + (d.message||''));
+  } catch(e){ cfgMsg('测试失败：' + e); }
+}
+function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function load(){
+  loadCfg();
+  const o = await fetch('/openapi.json').then(r=>r.json());
+  const ops = {};
+  for (const [path, methods] of Object.entries(o.paths||{})) {
+    for (const [method, op] of Object.entries(methods)) {
+      if (method==='parameters') continue;
+      const key = method.toUpperCase()+'|'+(op.summary||'');
+      if (!ops[key]) ops[key]={method:method.toUpperCase(), summary:op.summary||'', desc:op.description||'', tag:(op.tags&&op.tags[0])||'其他', paths:[], params:[]};
+      ops[key].paths.push(path);
+      (op.parameters||[]).filter(p=>p.in==='query').forEach(p=>ops[key].params.push({name:p.name, req:p.required, desc:p.description||''}));
+    }
+  }
+  const groups = {};
+  Object.values(ops).forEach(op=>{ (groups[op.tag]=groups[op.tag]||[]).push(op); });
+  const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function render(list){
+    return Object.entries(groups).filter(([tag])=> !list || tag.includes(list) || JSON.stringify(groups[tag]).includes(list)).map(([tag, arr])=>{
+      const html = arr.map(op=>{
+        const en = op.paths.find(p=>!/[\u4e00-\u9fa5]/.test(p)) || op.paths[0];
+        const cn = op.paths.find(p=>/[\u4e00-\u9fa5]/.test(p));
+        const curl = op.method==='GET'
+          ? `curl "${location.origin}${en}"`
+          : `curl -X POST "${location.origin}${en}" -H "Content-Type: application/json" -d '{}'`;
+        const params = op.params.length?`<table><tr><th>参数</th><th>必填</th><th>说明</th></tr>${op.params.map(p=>`<tr><td><code>${esc(p.name)}</code></td><td>${p.req?'是':'否'}</td><td>${esc(p.desc||'')}</td></tr>`).join('')}</table>`:'';
+        return `<div class="api"><div class="row1"><span class="m m-${op.method.toLowerCase()}">${op.method}</span><span class="summary">${esc(op.summary)}</span></div>
+          <div class="desc">${esc(op.desc)}</div>
+          <div class="paths"><div>英文：<code>${esc(en)}</code></div>${cn?`<div>中文：<code>${esc(cn)}</code></div>`:''}</div>
+          ${params}
+          <div class="note">示例：<code>${esc(curl)}</code></div></div>`;
+      }).join('');
+      return `<div class="tag">${esc(tag)}</div>${html}`;
+    }).join('');
+  }
+  document.getElementById('groups').innerHTML = render('');
+  document.getElementById('kw').addEventListener('input', e=>{
+    const v = e.target.value.trim();
+    document.getElementById('groups').innerHTML = render(v);
+  });
+}
+load();
+</script>
+</body>
+</html>

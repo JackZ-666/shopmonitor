@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.png" type="image/png">
+<title>电商数据大屏</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#0b1320; --card:#131e2d; --line:#223244; --text:#e8eef5; --muted:#7f8fa3;
+    --accent:#5ea0ff; --accent2:#8ab4ff; --ok:#4fd08a; --warn:#ffb27a; --amber:#f0a020;
+  }
+  body { font-family:"Microsoft YaHei",system-ui,sans-serif; background:radial-gradient(1200px 600px at 20% -10%, #14233a 0%, var(--bg) 60%); color:var(--text); min-height:100vh; padding:18px 24px; }
+  .head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; }
+  .head h1 { font-size:26px; font-weight:700; letter-spacing:1px; }
+  .head .sub { color:var(--muted); font-size:13px; margin-top:6px; }
+  .head .right { text-align:right; color:var(--muted); font-size:13px; }
+  .head .clock { font-size:22px; color:var(--accent); font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .card { background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)); background-color:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; }
+  .card h2 { font-size:15px; color:var(--accent); border-left:3px solid var(--amber); padding-left:8px; margin-bottom:12px; }
+  .span-12 { grid-column:span 12; } .span-6 { grid-column:span 6; } .span-4 { grid-column:span 4; } .span-3 { grid-column:span 3; } .span-2 { grid-column:span 2; }
+  .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .stat { background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .stat .k { font-size:12px; color:var(--muted); }
+  .stat .v { font-size:26px; font-weight:700; color:var(--accent2); margin-top:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { padding:7px 8px; text-align:right; border-bottom:1px solid var(--line); }
+  th:first-child, td:first-child { text-align:left; }
+  th { color:var(--muted); font-weight:500; font-size:12px; }
+  .row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed var(--line); font-size:13px; gap:8px; }
+  .row:last-child { border-bottom:none; }
+  .badge { font-size:11px; padding:1px 8px; border-radius:10px; background:rgba(94,160,255,.15); color:var(--accent2); }
+  .hot { color:var(--muted); font-size:12px; }
+  .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:16px; }
+
+  /* ===== 美化（覆盖） ===== */
+  :root { --top-g1:#0b1a2e; --top-g2:#123c6e; --top-g3:#1b5bbf; }
+  [data-color="green"] { --accent:#4ade80; --accent2:#86efac; --top-g1:#052e16; --top-g2:#166534; --top-g3:#16a34a; }
+  [data-color="purple"] { --accent:#c4b5fd; --accent2:#a78bfa; --top-g1:#2e1065; --top-g2:#5b21b6; --top-g3:#7c3aed; }
+  [data-color="orange"] { --accent:#fdba74; --accent2:#fb923c; --top-g1:#431407; --top-g2:#9a3412; --top-g3:#ea580c; }
+  body { padding:16px 22px; }
+  .head { background:linear-gradient(120deg,var(--top-g1) 0%,var(--top-g2) 62%,var(--top-g3) 100%); border-radius:14px; padding:16px 20px; margin-bottom:14px; box-shadow:0 4px 18px rgba(0,0,0,.35); }
+  .head .logo { width:44px; height:44px; border-radius:11px; background:linear-gradient(135deg,#f0a020,#ffc65c); display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 2px 8px rgba(0,0,0,.3); flex:0 0 auto; }
+  .head .right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .head .clock { color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.3); }
+  .head #ts { color:rgba(255,255,255,.75); }
+  .dock { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .dck { display:inline-block; padding:6px 14px; border-radius:20px; background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--text); font-size:13px; text-decoration:none; transition:.15s; }
+  .dck:hover { border-color:var(--accent2); transform:translateY(-1px); }
+  .card { border-radius:14px; transition:border-color .2s; }
+  .card:hover { border-color:var(--accent2); }
+  .stat .v { font-size:28px; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="logo">🛒</span>
+    <div>
+      <h1>电商数据大屏</h1>
+      <div class="sub">UUMit 免费数据 ｜ 自动刷新 60 秒</div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="clock" id="clock">--:--:--</div>
+    <div id="ts">加载中…</div>
+    <select id="colorSel" onchange="applyColor(this.value)" style="padding:6px 8px;border-radius:8px;border:none;font-size:12px;background:#0b1320;color:#e8eef5">
+      <option value="blue">🔵 蓝</option><option value="green">🟢 绿</option><option value="purple">🟣 紫</option><option value="orange">🟠 橙</option>
+    </select>
+    <a href="/" style="color:#fff;font-size:13px;text-decoration:none;opacity:.9">⌂ 返回面板</a>
+    <a href="/接口文档" target="_blank" style="color:#fff;font-size:13px;text-decoration:none;opacity:.9">📚 文档</a>
+  </div>
+</div>
+<div class="dock">
+  <a class="dck" href="/">⌂ 面板</a>
+  <a class="dck" href="/大屏">📊 本大屏</a>
+  <a class="dck" href="/#view=sec-tools" target="_blank">🧮 毛利计算器</a>
+  <a class="dck" href="/#view=sec-picks" target="_blank">🗃️ 选品库</a>
+  <a class="dck" href="/#view=sec-blue" target="_blank">🌊 蓝海选词</a>
+  <a class="dck" href="/接口文档" target="_blank">📚 接口文档</a>
+</div>
+<div class="grid">
+  <div class="card span-12"><h2>大盘概览</h2><div class="stats" id="stats">加载中…</div></div>
+  <div class="card span-4"><h2>平台对比</h2><table><tr><th>平台</th><th>商品数</th><th>均价</th><th>销量</th><th>评分</th></tr><tbody id="pf"></tbody></table></div>
+  <div class="card span-4"><h2>抖音热搜 Top10</h2><div id="hot"></div></div>
+  <div class="card span-4"><h2>百度热搜 Top10</h2><div id="bd"></div></div>
+  <div class="card span-12"><h2>成交额趋势（按月）</h2><div id="trend"></div></div>
+</div>
+  <div class="card span-12"><h2>预估毛利概览 <span class="badge">成本40% / 运费¥8 / ACOS10%</span></h2>
+    <div class="stats" id="pstats">加载中…</div>
+    <table style="margin-top:12px"><tr><th>商品</th><th>平台</th><th>价格</th><th>销量</th><th>预估毛利</th><th>毛利率</th></tr><tbody id="plist"></tbody></table>
+  </div>
+</div>
+<div class="foot">ShopMonitor 数据大屏</div>
+<script>
+const B='';
+async function j(method,path,body){const o={method,headers:{'Content-Type':'application/json'}};if(body)o.body=JSON.stringify(body);const r=await fetch(B+path,o);return r.json();}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtNum(n){if(n===null||n===undefined||isNaN(n))return '-';if(Math.abs(n)>=1e8)return (n/1e8).toFixed(2)+' 亿';if(Math.abs(n)>=1e4)return (n/1e4).toFixed(1)+' 万';return Number(n).toLocaleString('zh-CN');}
+function fmtMoney(n){if(n===null||n===undefined||isNaN(n))return '-';if(Math.abs(n)>=1e8)return (n/1e8).toFixed(2)+' 亿';if(Math.abs(n)>=1e4)return (n/1e4).toFixed(1)+' 万';return n.toFixed(2);}
+async function load(){
+  try{
+    const d=await j('GET','/api/v1/uumit/大盘');
+    const cards=d.cards||[];
+    document.getElementById('stats').innerHTML=cards.map(c=>`<div class="stat"><div class="k">${esc(c.label)}</div><div class="v">${esc(c.value)}</div></div>`).join('');
+    const rows=(d.platforms&&d.platforms.items)||[];
+    document.getElementById('pf').innerHTML=rows.map(r=>`<tr><td>${esc(r.platform)}</td><td>${fmtNum(r.product_count)}</td><td>${fmtMoney(r.avg_price)}</td><td>${fmtNum(r.sales_count)}</td><td>${r.avg_rating?r.avg_rating:'-'}</td></tr>`).join('')||'<tr><td colspan="5" class="hot">暂无</td></tr>';
+    const tr=(d.trend&&d.trend.items)||[];
+    const max=Math.max(...tr.map(x=>Number(x.total_amount)||0),1);
+    document.getElementById('trend').innerHTML=tr.map(x=>{const w=Math.max(2,Math.round((Number(x.total_amount)||0)/max*100));return `<div class="row"><span>${esc(x.period)}</span><span>${fmtMoney(x.total_amount)}</span><span style="flex:1"><span class="trend" style="display:inline-block;height:12px;border-radius:6px;width:${w}%;background:linear-gradient(90deg,var(--accent2),var(--accent));vertical-align:middle"></span></span><span class="hot">${fmtNum(x.order_count)} 单</span></div>`;}).join('')||'暂无';
+    document.getElementById('ts').textContent='更新于 '+new Date().toLocaleTimeString('zh-CN');
+  }catch(e){document.getElementById('ts').textContent='大盘加载失败';}
+  try{const d=await j('GET','/api/v1/uumit/热搜');document.getElementById('hot').innerHTML=(d.items||[]).map(x=>`<div class="row"><span><span class="badge">${x.rank}</span> ${esc(x.title)}</span><span class="hot">${fmtNum(x.hot)}</span></div>`).join('')||'暂无';}catch(e){document.getElementById('hot').textContent='加载失败';}
+  try{const d=await j('GET','/api/v1/uumit/百度热搜?type=realtime');document.getElementById('bd').innerHTML=(d.items||[]).slice(0,10).map(x=>`<div class="row"><span><span class="badge">${x.rank}</span> ${esc(x.title)}</span><span class="hot">${x.index||''}</span></div>`).join('')||'暂无';}catch(e){document.getElementById('bd').textContent='加载失败';}
+  try{
+    const d=await j('GET','/api/v1/工具/毛利概览?limit=8');
+    document.getElementById('pstats').innerHTML =
+      `<div class="stat"><div class="k">商品数</div><div class="v">${fmtNum(d.count)}</div></div>` +
+      `<div class="stat"><div class="k">总预估毛利</div><div class="v">¥${fmtMoney(d.total_profit)}</div></div>` +
+      `<div class="stat"><div class="k">平均预估毛利</div><div class="v">¥${fmtMoney(d.avg_profit)}</div></div>` +
+      `<div class="stat"><div class="k">盈利占比</div><div class="v">${d.positive_ratio}%</div></div>` +
+      `<div class="stat"><div class="k">数据源</div><div class="v" style="font-size:14px">${esc(d.source)}</div></div>`;
+    document.getElementById('plist').innerHTML=(d.items||[]).map(x=>{
+      const c=x.estimated_profit>=0?'var(--ok)':'var(--warn)';
+      return `<tr><td>${esc(x.title)}</td><td>${esc(x.platform)}</td><td>${fmtMoney(x.price)}</td><td>${fmtNum(x.sales)}</td><td style="color:${c}">¥${fmtMoney(x.estimated_profit)}</td><td>${x.estimated_margin!=null?x.estimated_margin+'%':'-'}</td></tr>`;
+    }).join('')||'<tr><td colspan="6" class="hot">暂无</td></tr>';
+  }catch(e){document.getElementById('plist').textContent='毛利概览加载失败';}
+}
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('zh-CN');}
+function applyColor(theme){
+  document.documentElement.setAttribute('data-color', theme);
+  localStorage.setItem('shopmonitor_color', theme);
+  const sel = document.getElementById('colorSel');
+  if (sel) sel.value = theme;
+}
+applyColor(localStorage.getItem('shopmonitor_color')||'blue');
+load();tick();setInterval(tick,1000);setInterval(load,60000);
+</script>
+</body>
+</html>

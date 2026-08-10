@@ -1,0 +1,9 @@
+{
+  "name": "shopmonitor-sku-monitor",
+  "description": "电商选品/竞品监控能力：跨平台榜单/搜索采集、价格销量历史、选品对比报告，并集成 UUMit 免费电商数据。",
+  "version": "0.1.0",
+  "user-invocable": true,
+  "runtime": { "python": ">=3.10" },
+  "entrypoints": ["SKILL.md", "scripts/sku_monitor.py"],
+  "requires": { "uumit-agent": ">=2.0.0" }
+}

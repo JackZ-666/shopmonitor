@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "product_id": "100012345678",
+      "title": "示例：无线蓝牙耳机 Pro（京东榜第1名）",
+      "price": 129.9,
+      "original_price": 199.0,
+      "sales": 32000,
+      "sales_text": "30天销量 3.2万",
+      "rating": 4.8,
+      "review_count": 50000,
+      "stock_status": "现货",
+      "promo_text": "满300减40",
+      "is_promo": true,
+      "shop_name": "示例官方旗舰店",
+      "shop_rating": 4.9,
+      "brand": "示例品牌",
+      "rank": 1,
+      "category": "数码",
+      "url": "https://item.jd.com/100012345678.html",
+      "image": "https://example.com/img.jpg"
+    },
+    {
+      "product_id": "100087654321",
+      "title": "示例：便携充电宝 20000mAh（京东榜第2名）",
+      "price": 79.0,
+      "original_price": 99.0,
+      "sales": 18000,
+      "sales_text": "30天销量 1.8万",
+      "rating": 4.7,
+      "review_count": 21000,
+      "stock_status": "现货",
+      "promo_text": null,
+      "is_promo": false,
+      "shop_name": "示例数码专营店",
+      "shop_rating": 4.8,
+      "brand": "示例品牌",
+      "rank": 2,
+      "category": "数码",
+      "url": "https://item.jd.com/100087654321.html",
+      "image": "https://example.com/img2.jpg"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+name: 数据包（每日自动生成）
+
+on:
+  schedule:
+    - cron: "0 2 * * *"      # 每天 02:00 UTC
+  workflow_dispatch:          # 也可手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt -q
+      - name: 生成数据包
+        run: python tools/gen_data_pack.py
+        env:
+          JD_UNION_APP_KEY: ${{ secrets.JD_UNION_APP_KEY }}
+          JD_UNION_SECRET_KEY: ${{ secrets.JD_UNION_SECRET_KEY }}
+          TAOBAO_APP_KEY: ${{ secrets.TAOBAO_APP_KEY }}
+          TAOBAO_APP_SECRET: ${{ secrets.TAOBAO_APP_SECRET }}
+          PDD_CLIENT_ID: ${{ secrets.PDD_CLIENT_ID }}
+          PDD_CLIENT_SECRET: ${{ secrets.PDD_CLIENT_SECRET }}
+          AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
+          AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
+          AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+          ALIEXPRESS_OPEN_APP_KEY: ${{ secrets.ALIEXPRESS_OPEN_APP_KEY }}
+          ALIEXPRESS_OPEN_APP_SECRET: ${{ secrets.ALIEXPRESS_OPEN_APP_SECRET }}
+          ALIEXPRESS_OPEN_ACCESS_TOKEN: ${{ secrets.ALIEXPRESS_OPEN_ACCESS_TOKEN }}
+          SHOPEE_PARTNER_ID: ${{ secrets.SHOPEE_PARTNER_ID }}
+          SHOPEE_PARTNER_KEY: ${{ secrets.SHOPEE_PARTNER_KEY }}
+          SHOPEE_ACCESS_TOKEN: ${{ secrets.SHOPEE_ACCESS_TOKEN }}
+          SHOPEE_SHOP_ID: ${{ secrets.SHOPEE_SHOP_ID }}
+      - name: 发布到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: webdata
+          publish_branch: gh-pages

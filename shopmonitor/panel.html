@@ -1,0 +1,1745 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.png" type="image/png">
+<title>选品监控面板</title>
+<style>
+  :root {
+    --bg:#f4f6f9; --card:#fff; --text:#222; --muted:#8a94a3;
+    --line:#eef1f5; --accent:#123c6e; --accent2:#1b5bbf; --warn:#c05621; --ok:#0a7a3d;
+    --input-bg:#fff; --input-border:#d7dce3; --stat-bg:#f7f9fc;
+    --btn-s:#f0f2f5; --btn-s-text:#333; --top-bg:#123c6e; --top-text:#fff;
+    --top-g1:#0e2a4d; --top-g2:#1b5bbf; --top-g3:#2f7fe0;
+    --shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  [data-theme="dark"] {
+    --bg:#0f1720; --card:#16202b; --text:#e6edf3; --muted:#8b98a9;
+    --line:#223040; --accent:#6ea8ff; --accent2:#8ab4ff; --warn:#ffb27a; --ok:#5bd68a;
+    --input-bg:#1c2836; --input-border:#2c3a4a; --stat-bg:#1c2836;
+    --btn-s:#223040; --btn-s-text:#e6edf3; --top-bg:#0b1a2e; --top-text:#e6edf3;
+    --top-g1:#0b1a2e; --top-g2:#123c6e; --top-g3:#1b5bbf;
+    --shadow:0 1px 4px rgba(0,0,0,.45);
+  }
+  [data-color="green"] { --accent:#0e6b3a; --accent2:#16a34a; --top-g1:#0b3d24; --top-g2:#15803d; --top-g3:#22c55e; }
+  [data-color="purple"] { --accent:#5b21b6; --accent2:#7c3aed; --top-g1:#3b0764; --top-g2:#6d28d9; --top-g3:#a855f7; }
+  [data-color="orange"] { --accent:#9a3412; --accent2:#ea580c; --top-g1:#431407; --top-g2:#c2410c; --top-g3:#f97316; }
+  [data-theme="dark"][data-color="green"] { --accent:#4ade80; --accent2:#86efac; --top-g1:#052e16; --top-g2:#166534; --top-g3:#16a34a; }
+  [data-theme="dark"][data-color="purple"] { --accent:#c4b5fd; --accent2:#a78bfa; --top-g1:#2e1065; --top-g2:#5b21b6; --top-g3:#7c3aed; }
+  [data-theme="dark"][data-color="orange"] { --accent:#fdba74; --accent2:#fb923c; --top-g1:#431407; --top-g2:#9a3412; --top-g3:#ea580c; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--text); transition:background .2s,color .2s; }
+  .top { background:var(--top-bg); color:var(--top-text); padding:12px 24px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .top h1 { font-size:18px; font-weight:600; }
+  .top .right { display:flex; align-items:center; gap:12px; }
+  .top .status { font-size:13px; opacity:.9; }
+  .wrap { max-width:1100px; margin:20px auto; padding:0 16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
+  .card { background:var(--card); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); }
+  .card h2 { font-size:15px; margin-bottom:12px; color:var(--accent); border-left:3px solid #f0a020; padding-left:8px; }
+  .row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--line); font-size:13px; gap:8px; }
+  .row:last-child { border-bottom:none; }
+  .badge { font-size:11px; padding:1px 8px; border-radius:10px; }
+  .b-dom { background:#e8f2ff; color:#1b5bbf; }
+  .b-cross { background:#fff3e0; color:#b26a00; }
+  .b-ok { background:#e6f7ee; color:#0a7a3d; }
+  .b-warn { background:#fff2e8; color:#c05621; }
+  .b-gray { background:var(--btn-s); color:var(--muted); }
+  .btn { display:inline-block; border:none; border-radius:6px; padding:7px 14px; font-size:13px; cursor:pointer; }
+  .btn-p { background:var(--accent); color:#fff; }
+  .btn-s { background:var(--btn-s); color:var(--btn-s-text); }
+  .btn-p:disabled { opacity:.6; cursor:default; }
+  .form { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+  .form input, .form select { padding:7px 8px; border:1px solid var(--input-border); border-radius:6px; font-size:13px; background:var(--input-bg); color:var(--text); }
+  .alert-item { padding:8px 0; border-bottom:1px dashed var(--line); font-size:13px; }
+  .alert-item:last-child { border-bottom:none; }
+  .sev-warning { color:var(--warn); font-weight:600; }
+  .sev-info { color:var(--accent2); }
+  .muted { color:var(--muted); font-size:12px; }
+  .num { font-size:22px; font-weight:600; color:var(--accent); }
+  .link { color:var(--accent2); text-decoration:none; font-size:13px; }
+  .foot { text-align:center; color:var(--muted); font-size:12px; margin:24px 0 40px; }
+  .msg { font-size:12px; color:var(--ok); margin-top:8px; min-height:16px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:12px; }
+  .stat { background:var(--stat-bg); border-radius:8px; padding:8px 10px; }
+  .stat .k { font-size:12px; color:var(--muted); }
+  .stat .v { font-size:18px; font-weight:600; color:var(--accent); margin-top:2px; }
+  table.tbl { width:100%; border-collapse:collapse; font-size:13px; }
+  table.tbl th, table.tbl td { padding:6px 8px; text-align:right; border-bottom:1px solid var(--line); }
+  table.tbl th:first-child, table.tbl td:first-child { text-align:left; }
+  table.tbl th { color:var(--muted); font-weight:500; }
+  .trend-row { display:grid; grid-template-columns:110px 64px 1fr 74px; gap:10px; align-items:center; padding:5px 0; font-size:13px; }
+  .trend-bar { height:14px; border-radius:7px; background:linear-gradient(90deg,var(--accent2),var(--accent)); min-width:2px; }
+  .chip { display:inline-block; background:var(--btn-s); border-radius:12px; padding:3px 10px; margin:3px; font-size:13px; }
+  .launcher { background:var(--stat-bg); border:1px solid var(--line); border-radius:12px; padding:12px 6px; text-align:center; cursor:pointer; font-size:12px; color:var(--text); transition:.15s; }
+.launcher:hover { transform:translateY(-2px); border-color:var(--accent2); box-shadow:var(--shadow); }
+.launcher .ic { font-size:24px; display:block; margin-bottom:4px; }
+.viewbar { display:flex; align-items:center; gap:10px; padding:8px 24px; background:var(--card); border-bottom:1px solid var(--line); font-size:13px; }
+#palette { position:fixed; top:12%; left:50%; transform:translateX(-50%); width:480px; max-width:92vw; z-index:300; background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+#palInput { width:100%; padding:12px 14px; border:none; border-bottom:1px solid var(--line); background:transparent; color:var(--text); font-size:14px; outline:none; }
+.pal-item { padding:9px 12px; border-radius:8px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+.pal-item:hover { background:var(--btn-s); }
+.nav { position:sticky; top:0; z-index:50; background:var(--card); border-bottom:1px solid var(--line); box-shadow:var(--shadow); padding:8px 24px; display:flex; gap:4px; overflow-x:auto; }
+  .nav a { display:inline-block; padding:6px 12px; font-size:13px; color:var(--text); text-decoration:none; border-radius:6px; white-space:nowrap; }
+  .nav a:hover { background:var(--btn-s); color:var(--accent); }
+  .nav a:first-child { color:var(--accent2); font-weight:600; }
+  [id^="sec-"] { scroll-margin-top: 52px; }
+  .up { color:var(--warn); } .down { color:var(--ok); }
+
+  /* ===== UI 美化（覆盖） ===== */
+  body { background:linear-gradient(180deg,var(--bg) 0%, var(--stat-bg) 100%); }
+  .top { background:linear-gradient(120deg,var(--top-g1) 0%,var(--top-g2) 62%,var(--top-g3) 100%); color:#fff; padding:14px 24px; box-shadow:0 2px 12px rgba(0,0,0,.18); }
+  .top h1 { font-size:20px; font-weight:700; letter-spacing:.5px; display:flex; align-items:center; gap:10px; }
+  .top .logo { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#f0a020,#ffc65c); display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .top .right .link { color:#fff; font-weight:600; opacity:.95; }
+  .dock { position:sticky; top:0; z-index:60; display:flex; gap:6px; padding:10px 14px; overflow-x:auto; background:var(--card); border-bottom:1px solid var(--line); box-shadow:var(--shadow); }
+  .dck { flex:0 0 auto; width:74px; text-align:center; cursor:pointer; border-radius:12px; padding:6px 2px 5px; color:var(--text); transition:transform .15s, background .15s; }
+  .dck:hover { transform:translateY(-2px); background:var(--btn-s); }
+  .dck .di { width:42px; height:42px; margin:0 auto 4px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:21px; color:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); }
+  .dck span { font-size:11px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card { border:1px solid var(--line); border-radius:14px; transition:border-color .2s, box-shadow .2s; }
+  .card:hover { border-color:color-mix(in srgb, var(--accent2) 45%, var(--line)); box-shadow:0 4px 14px rgba(0,0,0,.06); }
+  .card h2 { border-left:3px solid transparent; border-image:linear-gradient(180deg,#f0a020,#ffc65c) 1; border-image-slice:1; border-left:3px solid #f0a020; }
+  .btn { border-radius:8px; transition:transform .12s, box-shadow .12s; }
+  .btn:hover { transform:translateY(-1px); }
+  .btn-p { background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 2px 6px rgba(0,0,0,.15); }
+  .btn-s { border:1px solid var(--line); }
+  .stat { border:1px solid var(--line); border-radius:12px; padding:12px 14px; transition:transform .15s; }
+  .stat:hover { transform:translateY(-1px); }
+  .stat .v { font-size:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .badge { font-weight:500; box-shadow:inset 0 0 0 1px rgba(0,0,0,.04); }
+  .viewbar { background:var(--card); border-bottom:1px solid var(--line); box-shadow:var(--shadow); }
+  .nav { padding:8px 14px; }
+  .pf-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px 10px; }
+  .pf-fld { display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--muted); }
+  .pf-fld input, .pf-fld select { width:100%; min-width:0; }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1><span class="logo">🛒</span>ShopMonitor 选品监控面板</h1>
+  <div class="right">
+    <a class="link" href="/大屏" style="color:#fff;opacity:.9" title="数据大屏">数据大屏</a>
+    <select id="colorSel" onchange="applyColor(this.value)" title="主题色" style="padding:6px 8px;border-radius:8px;border:none;font-size:13px">
+      <option value="blue">🔵 蓝</option><option value="green">🟢 绿</option><option value="purple">🟣 紫</option><option value="orange">🟠 橙</option>
+    </select>
+    <button class="btn btn-s" onclick="openPalette()" title="Ctrl+K 打开快捷指令">⌘ 快捷指令</button>
+    <button class="btn btn-s" id="themeBtn" onclick="toggleTheme()">深色</button>
+    <button class="btn btn-s" id="logoutBtn" onclick="logout()" style="display:none" title="退出访问口令">退出</button>
+    <div class="status" id="svc">正在加载…</div>
+  </div>
+</div>
+<div class="dock" id="dock"></div>
+<div class="viewbar" id="viewBar" style="display:none">
+  <button class="btn btn-s" onclick="goHome()">⌂ 全部模块</button>
+  <span id="viewTitle" style="font-weight:600"></span>
+  <span class="muted" style="flex:1;text-align:right">Ctrl+K 快捷指令跳转</span>
+</div>
+<div id="palette" style="display:none">
+  <input id="palInput" placeholder="输入模块名回车跳转（Ctrl+K 打开）" autocomplete="off">
+  <div id="palList" style="max-height:340px;overflow:auto;padding:6px"></div>
+</div>
+<div class="wrap">
+  <div class="grid" id="sec-overview">
+    <div class="card" style="grid-column:1/-1">
+      <h2>今日焦点 <span class="badge b-gray">概览</span></h2>
+      <div class="stats" id="focusCards">加载中…</div>
+    </div>
+    <div class="card">
+      <h2>平台</h2>
+      <div id="platforms">加载中…</div>
+    </div>
+    <div class="card" id="sec-monitor">
+      <h2>监控</h2>
+      <div class="row"><span>关注数</span><span class="num" id="watchCount">-</span></div>
+      <div class="row"><span>未读告警</span><span class="num" id="unread">-</span></div>
+      <div class="row"><span>巡检间隔</span><span id="interval">-</span></div>
+      <div class="row"><span>上次巡检</span><span id="lastRun" class="muted">-</span></div>
+      <button class="btn btn-p" id="runBtn" onclick="runMonitor()">立即巡检</button>
+      <button class="btn btn-s" onclick="genReport()">生成日报</button>
+      <button class="btn btn-s" onclick="genPeriod('week')">生成周报</button>
+      <button class="btn btn-s" onclick="genPeriod('month')">生成月报</button>
+      <span class="muted" id="periodMsg"></span>
+      <div class="msg" id="reportMsg"></div>
+      <div class="form">
+        <select id="pf"><option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option><option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option><option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option></select>
+        <input id="kw" placeholder="关键词/类目" value="数码">
+        <input id="topn" placeholder="盯前N名" value="10" style="width:70px">
+        <input id="tgtPrice" placeholder="目标价(可选)" style="width:100px">
+        <button class="btn btn-p" onclick="addWatch()">添加关注</button>
+      </div>
+      <div class="msg" id="watchMsg"></div>
+    </div>
+    <div class="card">
+      <h2>最近告警 <button class="btn btn-s" onclick="markAllRead()" style="float:right;padding:3px 10px">全部已读</button></h2>
+      <div id="alerts">暂无</div>
+    </div>
+    <div class="card" id="sec-dash">
+      <h2>大盘数据 <span class="badge b-ok">UUMit 免费数据</span></h2>
+      <div class="stats" id="ovCards">加载中…</div>
+      <table class="tbl">
+        <tr><th>平台</th><th>商品数</th><th>均价</th><th>销量</th><th>评分</th></tr>
+        <tbody id="platformPerf"><tr><td colspan="5" class="muted">加载中…</td></tr></tbody>
+      </table>
+      <div class="row" style="margin-top:10px"><span class="muted" id="pfRatio"></span><a class="link" href="javascript:void(0)" onclick="loadDash(true)">刷新数据</a></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>销售趋势（UUMit 免费数据）</h2>
+    <div class="form">
+      <select id="trGrain">
+        <option value="month">按月</option><option value="quarter">按季</option><option value="year">按年</option>
+      </select>
+      <select id="trRange">
+        <option value="all" selected>全部</option>
+        <option value="2024H1">2024 上半年</option>
+        <option value="2024H2">2024 下半年</option>
+        <option value="2024full">2024 全年</option>
+      </select>
+      <button class="btn btn-p" onclick="loadTrend()">查询</button>
+      <span style="flex:1"></span>
+      <a class="link" href="/api/v1/uumit/报告?fmt=md" target="_blank">导出报告</a>
+      <a class="link" href="/api/v1/uumit/报告?fmt=csv" target="_blank">导出 CSV</a>
+    </div>
+    <div class="row" style="margin-top:10px"><span class="muted" id="trendMeta"></span></div>
+    <div id="trendBars" style="margin-top:6px">加载中…</div>
+    <div class="msg" id="trendMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-hot">
+    <h2>热搜 · 选词 <span class="badge b-ok">UUMit 免费数据</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div>
+        <div class="row"><span style="font-weight:600">抖音实时热搜</span><a class="link" href="javascript:void(0)" onclick="loadHot(true)">刷新</a></div>
+        <div id="hotList" style="margin-top:6px">加载中…</div>
+      </div>
+      <div>
+        <div class="row"><span style="font-weight:600">百度热搜</span>
+          <select id="bdType" onchange="loadBaidu()" style="padding:3px 6px;font-size:12px">
+            <option value="realtime">实时</option><option value="novel">小说</option>
+            <option value="movie">电影</option><option value="teleplay">电视剧</option>
+            <option value="car">汽车</option><option value="game">游戏</option>
+          </select>
+        </div>
+        <div id="bdList" style="margin-top:6px">加载中…</div>
+      </div>
+      <div>
+        <div class="row"><span style="font-weight:600">淘宝联想词（选词）</span></div>
+        <div class="form">
+          <input id="sgKw" placeholder="输入商品词，如：手机" value="手机" style="flex:1">
+          <button class="btn btn-p" onclick="loadSuggest()">查询</button>
+        </div>
+        <div id="sgList" style="margin-top:8px">加载中…</div>
+        <div class="msg" id="sgMsg"></div>
+      </div>
+    </div>
+    <div class="form" style="margin-top:12px">
+      <a class="link" href="/api/v1/uumit/热搜报告?fmt=md" target="_blank">导出热搜报告 (MD)</a>
+      <a class="link" href="/api/v1/uumit/热搜报告?fmt=csv" target="_blank">导出 CSV</a>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>商品价格历史</h2>
+    <div class="form">
+      <select id="hpPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="hpId" placeholder="商品 ID（先拉一次榜单自动记录）" style="flex:1">
+      <button class="btn btn-p" onclick="loadHistory()">查看历史</button>
+    </div>
+    <div id="hpBox" style="margin-top:10px" class="muted">输入平台与商品 ID 查询价格/销量历史（数据来自本地缓存快照）。</div>
+    <div class="msg" id="hpMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>排名趋势（监控快照）</h2>
+    <div class="form">
+      <select id="rtWatch" onchange="loadRtProducts()"><option value="">— 选择关注项 —</option></select>
+      <select id="rtProd" style="flex:1"><option value="">— 商品 —</option></select>
+      <button class="btn btn-p" onclick="loadRankTrend()">查看</button>
+    </div>
+    <div id="rtBox" style="margin-top:10px" class="muted">选择关注项后查看该榜商品的排名/价格趋势（需先运行过巡检）。</div>
+    <div class="msg" id="rtMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>AI 选品分析</h2>
+    <div class="form">
+      <input id="aiKw" placeholder="选品方向/关键词，如：手机配件" value="手机配件" style="flex:1">
+      <button class="btn btn-p" onclick="runAi()">开始分析</button>
+      <span class="muted" id="aiStatus">检查配置…</span>
+    </div>
+    <div id="aiBox" style="margin-top:10px;white-space:pre-wrap;font-size:13px;line-height:1.7" class="muted">输入关键词后点「开始分析」，AI 结合大盘/热搜/联想词给出选品建议。</div>
+    <div class="msg" id="aiMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-tools">
+    <h2>毛利估算器 <span class="badge b-gray">定价选品</span></h2>
+    <div class="note">按「售价 − 采购成本 − 运费 − 打包 − 平台佣金 − 其他 − 税费 − 履约费 − 仓储费 − 收付费 − 汇损」估算毛利。售价/履约费/仓储费按结算币种填，采购成本/运费/打包费按人民币填；比率填百分比（5=5%）。</div>
+    <div class="form" style="flex-wrap:wrap;align-items:center">
+      <span class="muted">整套模板：</span>
+      <select id="pfTemplate" onchange="applyTemplate()" style="width:auto"><option value="">手动设置</option></select>
+      <button class="btn btn-s" onclick="saveTemplate()" title="把当前参数存为「我的模板」">⭐存为模板</button>
+      <span class="muted">（选模板自动填好全部参数，可再微调）</span>
+    </div>
+    <div class="pf-grid">
+      <label class="pf-fld" title="你在店铺里标出的单价（结算币种）">售价（结算币种）<input id="pfSale" type="number" value="129" step="0.01"></label>
+      <label class="pf-fld" title="进货价/生产成本（人民币/件）">采购成本（元/件）<input id="pfCost" type="number" value="50" step="0.01"></label>
+      <label class="pf-fld" title="每件物流费（人民币/件，按运营模式提示填）">运费（元/件）<input id="pfShip" type="number" value="10" step="0.01"></label>
+      <label class="pf-fld" title="平台抽成比例，如 5 表示 5%（选运营模式自动带入）">平台佣金率（%）<input id="pfComm" type="number" value="5" step="0.1"></label>
+      <label class="pf-fld" title="包装/支付/售后等杂费比例">其他费率（%）<input id="pfOther" type="number" value="1" step="0.1"></label>
+      <label class="pf-fld" title="税率（占售价），国内增值税约 13%，跨境多为 0">税率（%）<input id="pfTax" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="一次估算几件（各项费用随件数累计）">件数<input id="pfQty" type="number" value="1" step="1"></label>
+      <button class="btn btn-p" onclick="calcProfit()" style="align-self:end;height:34px">计算</button>
+    </div>
+    <div class="form" style="margin-top:6px;flex-wrap:wrap;align-items:center">
+      <span class="muted">结算币种：</span>
+      <select id="pfCur" onchange="fillFx()" style="width:auto">
+        <option value="CNY">人民币 CNY（国内）</option>
+        <optgroup label="Amazon">
+          <option value="USD">美元 USD（美国）</option><option value="GBP">英镑 GBP（英国）</option>
+          <option value="EUR">欧元 EUR（欧盟）</option><option value="JPY">日元 JPY（日本）</option>
+          <option value="CAD">加元 CAD（加拿大）</option><option value="MXN">墨西哥比索 MXN</option>
+          <option value="AUD">澳元 AUD（澳洲）</option><option value="BRL">巴西雷亚尔 BRL</option>
+        </optgroup>
+        <optgroup label="TikTok Shop">
+          <option value="USD">美元 USD（美区）</option><option value="GBP">英镑 GBP（英国）</option>
+          <option value="EUR">欧元 EUR（欧盟）</option><option value="PLN">波兰兹罗提 PLN</option>
+          <option value="SEK">瑞典克朗 SEK</option><option value="MYR">马来西亚林吉特 MYR</option>
+          <option value="THB">泰铢 THB（泰国）</option><option value="VND">越南盾 VND</option>
+          <option value="PHP">菲律宾比索 PHP</option><option value="SGD">新加坡元 SGD</option>
+          <option value="JPY">日元 JPY（日本）</option><option value="MXN">墨西哥比索 MXN</option>
+          <option value="BRL">巴西雷亚尔 BRL</option>
+        </optgroup>
+        <optgroup label="Shopee">
+          <option value="MYR">马来西亚林吉特 MYR</option><option value="THB">泰铢 THB（泰国）</option>
+          <option value="VND">越南盾 VND</option><option value="PHP">菲律宾比索 PHP</option>
+          <option value="IDR">印尼盾 IDR</option><option value="SGD">新加坡元 SGD</option>
+          <option value="TWD">新台币 TWD（台湾）</option><option value="BRL">巴西雷亚尔 BRL</option>
+          <option value="MXN">墨西哥比索 MXN</option><option value="CLP">智利比索 CLP</option>
+          <option value="COP">哥伦比亚比索 COP</option><option value="PEN">秘鲁索尔 PEN</option>
+        </optgroup>
+        <optgroup label="AliExpress 联盟">
+          <option value="CNY">人民币 CNY</option><option value="USD">美元 USD</option>
+          <option value="EUR">欧元 EUR</option><option value="GBP">英镑 GBP</option>
+          <option value="RUB">俄罗斯卢布 RUB</option><option value="TRY">土耳其里拉 TRY</option>
+          <option value="KRW">韩元 KRW</option>
+        </optgroup>
+      </select>
+      <input id="pfFx" placeholder="汇率" type="number" step="0.0001" style="width:92px" title="1 单位结算币种 = 多少人民币（自动填充，可手动改）" disabled>
+      <button class="btn btn-s" onclick="loadFx()" title="重新获取实时汇率">刷新汇率</button>
+      <span class="muted" id="pfFxInfo">正在加载汇率…</span>
+    </div>
+    <div class="pf-grid" style="margin-top:10px">
+      <label class="pf-fld">运营模式<select id="pfMode" onchange="applyFulfillment()"><option value="">手动设置</option></select></label>
+      <label class="pf-fld" title="平台履约费/件（如 Amazon FBA 履行费，结算币种）">履约费（外币/件）<input id="pfFulfill" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="海外仓/平台仓 单位月仓储费（结算币种）">月仓储费（外币/件）<input id="pfStorage" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="收款/结汇手续费率，如万里汇约 0.5%">收款手续费（%）<input id="pfPayFee" type="number" value="0.5" step="0.1"></label>
+      <label class="pf-fld" title="结汇汇率损失率">汇损（%）<input id="pfFxLoss" type="number" value="0.5" step="0.1"></label>
+      <label class="pf-fld" title="包装/耗材费（人民币/件）">打包费（元/件）<input id="pfPack" type="number" value="1" step="0.1"></label>
+    </div>
+    <div class="muted" id="pfModeInfo" style="margin-top:6px">选「运营模式」自动套用费用（示例值可改），也可手动填写。</div>
+    <div class="pf-grid" style="margin-top:10px">
+      <label class="pf-fld">类目预设（ACOS）<select id="pfCat" onchange="applyCategoryPreset()"><option value="">手动选择</option></select></label>
+      <label class="pf-fld" title="Amazon FBA 尺寸/重量分档（自动带出履行费，美国站参考价）">FBA 分档<select id="pfTier" onchange="applyTier()" disabled><option value="">选 FBA 后可用</option></select></label>
+      <label class="pf-fld" title="广告支出占销售额比例（ACOS），如 15 表示 15%">广告费 ACOS（%）<input id="pfAcos" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="长期/超龄库存仓储费（结算币种/件·月，如 Amazon 超龄库存约 $0.15）">长期仓储费（外币/件·月）<input id="pfLong" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="移除/弃置费（结算币种/件，一次性，如 Amazon 标准件约 $0.55）">移除/弃置费（外币/件）<input id="pfRemoval" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="进口关税/增值税 占采购成本比例，如欧盟 VAT 约 20%">关税（%成本）<input id="pfDuty" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="退货/退款率（按全损简化），如 5 表示 5%">退货率（%）<input id="pfReturn" type="number" value="0" step="0.1"></label>
+      <label class="pf-fld" title="一次性固定费用（结算币种），如平台月租/保证金分摊">一次性固定费（外币）<input id="pfFixed" type="number" value="0" step="1"></label>
+    </div>
+    <div id="pfBox" style="margin-top:10px;font-size:13px;line-height:1.9"></div>
+    <div class="msg" id="pfMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>今日变动榜 <span class="badge b-gray">需先运行巡检</span></h2>
+    <div class="form">
+      <button class="btn btn-s" onclick="loadMovers()">刷新</button>
+      <span class="muted" id="moversMeta"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px">
+      <div><div class="row"><span style="font-weight:600;color:var(--warn)">降价榜</span></div><div id="mvDrops" class="muted">暂无</div></div>
+      <div><div class="row"><span style="font-weight:600;color:var(--accent2)">涨价榜</span></div><div id="mvRises" class="muted">暂无</div></div>
+      <div><div class="row"><span style="font-weight:600;color:var(--ok)">销量飙升</span></div><div id="mvSurges" class="muted">暂无</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>新品上榜 <span class="badge b-gray">竞品上新监控 · 榜单级</span></h2>
+    <div class="form"><button class="btn btn-s" onclick="loadNewArrivals()">刷新</button><span class="muted" id="naMeta"></span></div>
+    <div id="naList" style="margin-top:8px" class="muted">巡检时自动发现新进入 Top-N 的商品并告警（需先跑一轮建立基线）。</div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>蓝海选词 <span class="badge b-ok">UUMit 免费数据</span></h2>
+    <div class="form">
+      <button class="btn btn-p" onclick="loadBlueOcean()">分析热搜蓝海词</button>
+      <span class="muted">蓝海指数 = 热度 ÷ (1+联想词数)，指数越高竞争越小</span>
+    </div>
+    <div id="boList" style="margin-top:8px" class="muted">分析抖音热搜词的蓝海机会（热度高 + 联想词少）。</div>
+    <div class="msg" id="boMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-rankTrend">
+    <h2>类目榜单趋势 <span class="badge b-gray">自动积累</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <select id="rtPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="rtCat" placeholder="类目/关键词" value="数码" style="width:120px">
+      <select id="rtDays"><option value="7">近7天</option><option value="14">近14天</option><option value="30">近30天</option></select>
+      <button class="btn btn-p" onclick="loadRankTrend()">查看趋势</button>
+      <span class="muted">每天拉一次该榜单自动积累快照（商品数/均价/新品）</span>
+    </div>
+    <div id="rtBox" style="margin-top:8px" class="muted">暂无快照：先去拉几次该平台榜单（每天一次），隔天查看趋势。</div>
+    <div class="msg" id="rtMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-bands">
+    <h2>价格带分析 <span class="badge b-gray">选品定价</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <select id="pbPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="pbCat" placeholder="类目/关键词" value="数码" style="width:120px">
+      <button class="btn btn-p" onclick="loadPriceBands()">分析价格带</button>
+      <button class="btn btn-s" onclick="loadPriceBandsCompare()">跨平台对比</button>
+      <span class="muted">单平台看分布；跨平台对比同一关键词哪边好卖</span>
+    </div>
+    <div id="pbBox" style="margin-top:8px" class="muted">选择平台与类目后分析。</div>
+    <div id="pbCmpBox" style="margin-top:8px" class="muted"></div>
+    <div class="msg" id="pbMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-compete">
+    <h2>类目竞争度 <span class="badge b-gray">市场分析</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <select id="cpPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="cpCat" placeholder="类目/关键词" value="数码" style="width:120px">
+      <button class="btn btn-p" onclick="loadCompetition()">分析竞争度</button>
+      <span class="muted">卖家数 / 头部集中度 / 价格离散度 → 蓝海/红海</span>
+    </div>
+    <div id="cpBox" style="margin-top:8px" class="muted">选择平台与类目后分析。</div>
+    <div class="msg" id="cpMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>潜力商品筛选</h2>
+    <div class="form">
+      <select id="flPf" onchange="loadProfitPrefs(this.value)">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="flCat" placeholder="类目" value="数码" style="width:100px">
+      <input id="flPriceMax" placeholder="最高价" type="number" style="width:90px">
+      <input id="flMinSales" placeholder="最低销量" type="number" style="width:90px">
+      <input id="flMinRating" placeholder="最低评分" type="number" step="0.1" style="width:90px">
+      <button class="btn btn-p" onclick="loadFilter()">筛选</button>
+    </div>
+    <div class="form" style="margin-top:6px;flex-wrap:wrap;align-items:center">
+      <span class="muted">毛利估算：</span>
+      <input id="flCostRate" placeholder="成本占比(%)" type="number" value="40" step="1" style="width:96px" title="预估采购成本占售价比例（用于毛利估算）">
+      <input id="flShip" placeholder="运费(元)" type="number" value="8" step="1" style="width:78px" title="预估运费（元/件）">
+      <input id="flAcos" placeholder="ACOS(%)" type="number" value="10" step="1" style="width:80px" title="预估广告费 ACOS（%）">
+      <input id="flDuty" placeholder="关税(%)" type="number" value="0" step="1" style="width:76px" title="预估进口关税（占成本比例）">
+      <input id="flReturn" placeholder="退货率(%)" type="number" value="0" step="1" style="width:86px" title="预估退货率（按全损简化）">
+      <input id="flProfitMin" placeholder="最低毛利(元)" type="number" style="width:100px" title="只保留预估毛利不低于此值的商品">
+      <button class="btn btn-s" onclick="exportProfitTable()">导出Excel</button>
+      <button class="btn btn-s" onclick="exportProfitTable('pdf')">导出PDF</button>
+      <span class="muted">预估毛利=售价×(1−佣金−1%其他−ACOS) − 成本×(1+关税) − 售价×退货率 − 运费</span>
+    </div>
+    <div id="flList" style="margin-top:8px" class="muted">设置条件后筛选，按潜力分排序（销量+评分+排名加权）；每行带预估毛利。</div>
+    <div class="msg" id="flMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>商品对比 <span class="badge b-gray">竞品对比</span></h2>
+    <div class="form">
+      <select id="cmPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="cmCat" placeholder="类目/关键词" value="数码" style="width:120px">
+      <button class="btn btn-s" onclick="loadCmpList()">加载商品</button>
+      <button class="btn btn-p" onclick="doCompare()">对比所选</button>
+      <button class="btn btn-s" onclick="exportComparePdf()" title="导出勾选商品的对比表 PDF">导出PDF</button>
+      <span class="muted">勾选 ≤5 个</span>
+    </div>
+    <div id="cmList" style="margin-top:8px" class="muted">先加载商品，再勾选要对比的。</div>
+    <div id="cmTable" style="margin-top:8px;overflow-x:auto"></div>
+    <div class="msg" id="cmMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>关注商品总览</h2>
+    <div class="form"><button class="btn btn-s" onclick="loadWatchOverview()">刷新</button><span class="muted" id="woMeta"></span></div>
+    <div id="woTable" style="margin-top:8px" class="muted">运行巡检后显示各关注商品最新状态。</div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-shop">
+    <h2>竞品店铺监控 <span class="badge b-gray">盯竞品</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <select id="smPf"><option value="shopee_open">Shopee（官方开放平台）</option><option value="tiktok_shop">TikTok Shop</option></select>
+      <input id="smShop" placeholder="店铺ID（如 Shopee shop_id）" style="flex:1;min-width:160px">
+      <button class="btn btn-p" onclick="loadShopMonitor()">拉取店铺商品</button>
+      <span class="muted">需平台凭证；未配置则给出引导</span>
+    </div>
+    <div id="smList" style="margin-top:8px" class="muted">输入店铺 ID 拉取该店在售商品，可一键加入选品库。</div>
+    <div class="msg" id="smMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-shopDyn">
+    <h2>竞品店动态 <span class="badge b-gray">时间线</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <select id="sdPf">
+        <option value="">全部平台</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <select id="sdDays"><option value="7">近7天</option><option value="14">近14天</option><option value="30">近30天</option></select>
+      <button class="btn btn-p" onclick="loadShopDyn()">查看动态</button>
+      <span class="muted">新品上榜 / 降价 / 涨价 / 销量飙升 / 排名变动</span>
+    </div>
+    <div id="sdBox" style="margin-top:8px" class="muted">先添加关注并运行巡检后自动积累，这里显示变化时间线。</div>
+    <div class="msg" id="sdMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-source">
+    <h2>1688 一键找货源 <span class="badge b-gray">比价</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <input id="srcKw" placeholder="商品词/标题，如：无线耳机" style="flex:1;min-width:160px">
+      <button class="btn btn-p" onclick="loadSource()">搜索货源</button>
+      <span class="muted">需 1688 开放平台凭证；未配置则给出引导</span>
+    </div>
+    <div id="srcList" style="margin-top:8px" class="muted">输入商品词去 1688 找同款货源（价格/厂家）。</div>
+    <div class="msg" id="srcMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>选品库 <span class="badge b-gray">收藏/备选管理</span></h2>
+    <div class="form" style="flex-wrap:wrap">
+      <select id="pkPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="pkId" placeholder="商品ID" style="width:110px">
+      <input id="pkTitle" placeholder="标题(可空)" style="flex:1;min-width:140px">
+      <input id="pkPrice" placeholder="价格(可空)" type="number" style="width:84px">
+      <button class="btn btn-p" onclick="addPick()">加入选品库</button>
+      <button class="btn btn-s" onclick="importPicksFromRank()" title="用「潜力商品筛选」的平台+类目拉榜单，导入 Top10">从当前榜单导入 Top10</button>
+      <button class="btn btn-s" onclick="exportPicks()">导出CSV</button>
+    </div>
+    <div id="pkList" style="margin-top:8px" class="muted">暂无收藏。可从榜单/筛选导入或手动添加。</div>
+    <div class="msg" id="pkMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="sec-detail">
+    <h2>商品详情</h2>
+    <div class="form">
+      <select id="dtPf">
+        <option value="mock">mock</option><option value="jd">京东</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="taobao">淘宝</option><option value="shopee">Shopee</option>
+        <option value="amazon">Amazon</option><option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option>
+      </select>
+      <input id="dtId" placeholder="商品 ID（可点上方列表里的商品）" style="flex:1">
+      <button class="btn btn-p" onclick="openDetail(document.getElementById('dtPf').value, document.getElementById('dtId').value)">查看</button>
+    </div>
+    <div id="dtBox" style="margin-top:8px" class="muted">输入平台与商品 ID，查看完整档案 + 历史价格/销量曲线 + 涨跌分析。</div>
+    <div class="msg" id="dtMsg"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>热搜词热度趋势 <span class="badge b-gray">自动积累快照</span></h2>
+    <div class="form">
+      <select id="htPf"><option value="douyin">抖音</option><option value="baidu_realtime">百度实时</option></select>
+      <select id="htDays"><option value="7">近 7 天</option><option value="3">近 3 天</option><option value="14">近 14 天</option></select>
+      <button class="btn btn-p" onclick="loadHotTrend()">查看</button>
+      <span class="muted">多拉几次热搜、隔天再看，趋势自动积累</span>
+    </div>
+    <div id="htBox" style="margin-top:8px" class="muted">暂无数据。</div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>批量导入监控</h2>
+    <div class="form">
+      <select id="biPf">
+        <option value="jd">京东</option><option value="taobao">淘宝</option><option value="pdd">拼多多</option>
+        <option value="douyin">抖音</option><option value="shopee">Shopee</option><option value="amazon">Amazon</option>
+        <option value="aliexpress">AliExpress</option><option value="douyin_mall">抖店</option><option value="taobao_open">淘宝官方</option><option value="pdd_open">拼多多官方</option><option value="alibaba_open">1688</option><option value="kuaishou_open">快手</option><option value="tiktok_shop">TikTok Shop</option><option value="amazon_open">Amazon官方</option><option value="shopee_open">Shopee官方</option><option value="aliexpress_open">AliExpress官方</option><option value="mock">mock</option>
+      </select>
+      <span class="muted">纯 ID 行用此平台；链接自动识别</span>
+      <button class="btn btn-p" onclick="batchImport()">导入并监控</button>
+    </div>
+    <textarea id="biText" rows="5" placeholder="每行一个商品链接（自动识别平台），或 平台:ID&#10;https://item.jd.com/100012345.html&#10;jd:100012345" style="width:100%;margin-top:8px;padding:8px;border:1px solid var(--input-border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:13px"></textarea>
+    <div class="msg" id="biMsg"></div>
+  </div>
+  <div class="card" id="sec-settings" style="margin-top:16px">
+    <h2>设置 · 平台 API 配置</h2>
+    <div class="muted" style="margin-bottom:8px">配置文件：项目根目录 <code>配置文件.env</code>（改完保存 → 重启服务生效）。未配置的平台自动用演示数据，不影响整体运行。</div>
+    <table class="tbl">
+      <tr><th>数据源</th><th>状态</th><th>说明</th></tr>
+      <tbody id="cfgRows"><tr><td colspan="3" class="muted">加载中…</td></tr></tbody>
+    </table>
+    <div class="row" style="margin-top:10px"><span>当前套餐</span><span id="planInfo">加载中…</span></div>
+    <div class="row"><span>英文报告（跨境卖家）</span><span class="muted"><a class="link" href="/api/v1/uumit/报告?fmt=md&lang=en" target="_blank">大盘 EN</a> ｜ <a class="link" href="/api/v1/uumit/热搜报告?fmt=md&lang=en" target="_blank">热搜 EN</a> ｜ <a class="link" href="/api/v1/报告/对比?fmt=md&lang=en&platform=mock&product_ids=demo-001" target="_blank">对比 EN</a></span></div>
+    <div class="form" style="margin-top:12px">
+      <a class="link" href="/api/v1/配置/数据源模板" target="_blank">下载数据源模板 JSON</a>
+      <span class="muted">按模板填商品榜单，把地址填到 配置文件.env 对应平台即可点亮真实数据</span>
+    </div>
+  </div>
+  <div class="foot">接口文档：<a class="link" href="/接口文档" target="_blank">中文文档</a> ｜ <a class="link" href="/docs" target="_blank">Swagger</a></div>
+</div>
+<script>
+const B = '';
+async function j(method, path, body) {
+  const opt = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opt.body = JSON.stringify(body);
+  const r = await fetch(B + path, opt);
+  return r.json();
+}
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function logout(){
+  try { await fetch('/logout', {method:'POST'}); } catch(e){}
+  location.href = '/';
+}
+async function init() {
+  if (window.SM_AUTH) document.getElementById('logoutBtn').style.display = 'inline-block';
+  applyTheme(localStorage.getItem('shopmonitor_theme') || 'light');
+  applyColor(localStorage.getItem('shopmonitor_color') || 'blue');
+  try {
+    const h = await fetch('/health').then(r=>r.json());
+    document.getElementById('svc').textContent = '运行正常';
+  } catch(e) { document.getElementById('svc').textContent = '未运行'; }
+  loadPlatforms(); loadMonitor(); loadAlerts(); loadDash(); loadHot(); loadBaidu(); loadSuggest(); loadRtWatches(); loadAiStatus(); loadWatchOverview(); loadSettings(); loadNewArrivals(); loadFx(); loadFulfillment(); loadProfitPrefs(document.getElementById("flPf") ? document.getElementById("flPf").value : "mock"); loadFocus(); loadPicks(); buildDock(); initModules(); applyView();
+}
+async function loadPlatforms(){
+  try {
+    const d = await j('GET','/api/v1/platforms');
+    document.getElementById('platforms').innerHTML = d.platforms.map(p =>
+      `<div class="row"><span><span class="badge ${p.regions==='国内'?'b-dom':'b-cross'}">${esc(p.regions)}</span> ${esc(p.name)}</span>` +
+      `<span class="badge ${p.availability.includes('需')?'b-warn':'b-ok'}">${esc(p.availability.replace(/（.*?）/g,''))}</span></div>`
+    ).join('');
+  } catch(e) { document.getElementById('platforms').textContent = '加载失败'; }
+}
+async function loadMonitor(){
+  try {
+    const d = await j('GET','/api/v1/monitor/status');
+    document.getElementById('watchCount').textContent = d.watch_count;
+    document.getElementById('unread').textContent = d.unread_alerts;
+    document.getElementById('interval').textContent = Math.round(d.interval_sec/60) + ' 分钟';
+    document.getElementById('lastRun').textContent = d.last_run_at ? String(d.last_run_at).replace('T',' ').slice(0,19) : '尚未巡检';
+  } catch(e){}
+}
+async function loadAlerts(){
+  try {
+    const d = await j('GET','/api/v1/monitor/alerts?limit=8');
+    const box = document.getElementById('alerts');
+    if (!d.alerts.length) { box.textContent = '暂无告警'; return; }
+    box.innerHTML = d.alerts.map(a =>
+      `<div class="alert-item"><span class="${a.severity==='warning'?'sev-warning':'sev-info'}">${esc(a.title)}</span> ${esc(a.message)}</div>`
+    ).join('');
+  } catch(e){}
+}
+function applyColor(theme){
+  document.documentElement.setAttribute('data-color', theme);
+  localStorage.setItem('shopmonitor_color', theme);
+  const sel = document.getElementById('colorSel');
+  if (sel) sel.value = theme;
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('shopmonitor_theme', t);
+  document.getElementById('themeBtn').textContent = (t==='dark' ? '浅色' : '深色');
+}
+function toggleTheme(){
+  const cur = (document.documentElement.getAttribute('data-theme')||'light');
+  applyTheme(cur==='dark' ? 'light' : 'dark');
+}
+function fmtNum(n){ if(n===null||n===undefined||isNaN(n)) return '-'; if(Math.abs(n)>=1e8) return (n/1e8).toFixed(2)+' 亿'; if(Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+' 万'; return Number(n).toLocaleString('zh-CN'); }
+function fmtMoney(n){ if(n===null||n===undefined||isNaN(n)) return '-'; if(Math.abs(n)>=1e8) return (n/1e8).toFixed(2)+' 亿'; if(Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+' 万'; return n.toFixed(2); }
+function cardHtml(c){ return `<div class="stat"><div class="k">${esc(c.label)}</div><div class="v">${esc(c.value)}</div></div>`; }
+async function loadDash(fresh){
+  try {
+    const d = await j('GET','/api/v1/uumit/dashboard?fresh=' + (fresh?'true':'false'));
+    const cards = d.cards || [];
+    document.getElementById('ovCards').innerHTML = cards.map(cardHtml).join('') || '<div class="muted">暂无数据</div>';
+    document.getElementById('dashNote') && (document.getElementById('dashNote').textContent = (d.overview||{}).note || '');
+    const rows = (d.platforms && d.platforms.items) || [];
+    document.getElementById('platformPerf').innerHTML = rows.map(r =>
+      `<tr><td>${esc(r.platform)}</td><td>${fmtNum(r.product_count)}</td><td>${fmtMoney(r.avg_price)}</td><td>${fmtNum(r.sales_count)}</td><td>${r.avg_rating?r.avg_rating:'-'}</td></tr>`
+    ).join('') || '<tr><td colspan="5" class="muted">暂无数据</td></tr>';
+    const priced = rows.filter(r=>r.avg_price>0);
+    if (priced.length>=2){
+      const mx = priced.reduce((a,b)=>a.avg_price>b.avg_price?a:b);
+      const mn = priced.reduce((a,b)=>a.avg_price<b.avg_price?a:b);
+      document.getElementById('pfRatio').textContent = `${esc(mx.platform)}均价约为${esc(mn.platform)}的 ${(mx.avg_price/mn.avg_price).toFixed(1)} 倍`;
+    }
+    if (d.account && d.account.connected) document.getElementById('ut').textContent = d.account.ut_balance;
+    renderTrend(d.trend || {});
+  } catch(e) {
+    document.getElementById('trendMsg').textContent = '大盘数据加载失败：请确认 UUMit 技能已授权';
+  }
+}
+function renderTrend(t){
+  const items = t.items || [];
+  let meta = t.note || '';
+  if (items.length>=2){
+    const first = items[0].total_amount, last = items[items.length-1].total_amount;
+    if (first>0) meta += ` ｜ 首尾 ${((last-first)/first*100).toFixed(1)}%`;
+  }
+  if (t.mom_growth_pct!=null) meta += ` ｜ 环比 ${t.mom_growth_pct>0?'+':''}${t.mom_growth_pct}%`;
+  if (t.last_period_partial) meta += '（末位残月，环比按完整周期）';
+  document.getElementById('trendMeta').textContent = meta;
+  if (!items.length) { document.getElementById('trendBars').textContent = '暂无数据'; return; }
+  const max = Math.max(...items.map(x=>Number(x.total_amount)||0), 1);
+  const maxOrd = Math.max(...items.map(x=>Number(x.order_count)||0), 1);
+  document.getElementById('trendBars').innerHTML = items.map(x => {
+    const w = Math.max(2, Math.round((Number(x.total_amount)||0)/max*100));
+    const wo = Math.max(2, Math.round((Number(x.order_count)||0)/maxOrd*100));
+    return `<div class="trend-row"><span>${esc(x.period)}</span><span>${fmtMoney(x.total_amount)}</span><div class="trend-bar" style="width:${w}%"></div><span class="muted">${fmtNum(x.order_count)} 单 · ${fmtNum(x.total_quantity)} 件</span></div>`;
+  }).join('');
+}
+const RANGE_DATES = { all:'', '2024H1':'2024-01-01,2024-06-30', '2024H2':'2024-07-01,2024-12-31', '2024full':'2024-01-01,2024-12-31' };
+async function loadTrend(){
+  const grain = document.getElementById('trGrain').value;
+  const rng = RANGE_DATES[document.getElementById('trRange').value] || '';
+  const parts = rng ? rng.split(',') : [];
+  let url = '/api/v1/uumit/trend?grain=' + grain;
+  if (parts.length===2) url += '&date_from=' + parts[0] + '&date_to=' + parts[1];
+  document.getElementById('trendMsg').textContent = '查询中…';
+  try {
+    const d = await j('GET', url);
+    renderTrend(d);
+    document.getElementById('trendMsg').textContent = '返回 ' + (d.items||[]).length + ' 个周期，费用 ' + d.charged_ut + ' UT';
+  } catch(e) { document.getElementById('trendMsg').textContent = '查询失败'; }
+}
+async function loadHot(fresh){
+  try {
+    const d = await j('GET','/api/v1/uumit/热搜?fresh=' + (fresh?'true':'false'));
+    const items = d.items || [];
+    document.getElementById('hotList').innerHTML = items.map(x =>
+      `<div class="row"><span><span class="badge b-dom">${x.rank}</span> ${esc(x.title)}</span><span class="muted">热度 ${fmtNum(x.hot)}</span></div>`
+    ).join('') || '<div class="muted">暂无热搜数据</div>';
+  } catch(e) { document.getElementById('hotList').textContent = '热搜加载失败'; }
+}
+async function loadSuggest(){
+  const kw = document.getElementById('sgKw').value.trim() || '手机';
+  document.getElementById('sgMsg').textContent = '查询中…';
+  try {
+    const d = await j('GET','/api/v1/uumit/联想词?keyword=' + encodeURIComponent(kw));
+    const items = d.items || [];
+    document.getElementById('sgList').innerHTML = items.map(x =>
+      `<span class="chip">${esc(x.word)}</span>`
+    ).join('') || '<div class="muted">无联想词</div>';
+    document.getElementById('sgMsg').textContent = '返回 ' + items.length + ' 个联想词，费用 ' + d.charged_ut + ' UT';
+  } catch(e) { document.getElementById('sgMsg').textContent = '查询失败'; }
+}
+async function loadBaidu(){
+  const type = document.getElementById('bdType').value;
+  try {
+    const d = await j('GET','/api/v1/uumit/百度热搜?type=' + type);
+    const items = d.items || [];
+    document.getElementById('bdList').innerHTML = items.map(x =>
+      `<div class="row"><span><span class="badge b-cross">${x.rank}</span> ${esc(x.title)}</span><span class="muted">${x.index||''}</span></div>`
+    ).join('') || '<div class="muted">暂无数据</div>';
+  } catch(e) { document.getElementById('bdList').textContent = '加载失败'; }
+}
+async function loadHistory(){
+  const pf = document.getElementById('hpPf').value;
+  const pid = document.getElementById('hpId').value.trim();
+  if (!pid) { document.getElementById('hpMsg').textContent = '请填写商品 ID'; return; }
+  document.getElementById('hpMsg').textContent = '查询中…';
+  try {
+    const d = await j('GET','/api/v1/商品/' + pf + '/' + encodeURIComponent(pid) + '/历史?limit=60');
+    const recs = (d.records || []).slice().reverse();
+    if (!recs.length) { document.getElementById('hpBox').textContent = '暂无历史数据'; document.getElementById('hpMsg').textContent=''; return; }
+    const maxP = Math.max(...recs.map(r=>Number(r.price)||0), 1);
+    document.getElementById('hpBox').innerHTML = recs.map(r => {
+      const t = String(r.crawled_at || '').replace('T',' ').slice(5,16);
+      const w = Math.max(2, Math.round((Number(r.price)||0)/maxP*100));
+      return `<div class="trend-row"><span>${esc(t)}</span><span>¥${r.price!=null?r.price:'-'}</span><div class="trend-bar" style="width:${w}%"></div><span class="muted">${r.sales!=null?('销量 '+r.sales):''} ${r.rating!=null?('评分 '+r.rating):''}</span></div>`;
+    }).join('');
+    const first = recs[0], last = recs[recs.length-1];
+    let msg = '共 ' + recs.length + ' 条记录';
+    if (first.price && last.price) msg += ' ｜ 期间价格 ' + last.price + ' → ' + first.price;
+    document.getElementById('hpMsg').textContent = msg;
+  } catch(e) { document.getElementById('hpMsg').textContent = '查询失败（先拉一次该平台榜单再试）'; }
+}
+async function genReport(){
+  document.getElementById('reportMsg').textContent = '生成中…';
+  try {
+    const d = await j('POST','/api/v1/监控/日报');
+    document.getElementById('reportMsg').innerHTML = '日报已生成（' + d.alerts_today + ' 条告警）<a class="link" href="/api/v1/监控/日报" target="_blank">查看</a> <a class="link" href="/api/v1/监控/日报?fmt=pdf" target="_blank">PDF</a>';
+  } catch(e) { document.getElementById('reportMsg').textContent = '生成失败：' + e; }
+}
+async function loadRtWatches(){
+  try {
+    const d = await j('GET','/api/v1/monitor/watches');
+    const sel = document.getElementById('rtWatch');
+    sel.innerHTML = '<option value="">— 选择关注项 —</option>' + d.watches.map(w =>
+      `<option value="${w.id}">#${w.id} ${esc(w.platform)} · ${esc(w.keyword || w.product_id || w.alias || '')}</option>`
+    ).join('');
+  } catch(e){}
+}
+async function loadRtProducts(){
+  const wid = document.getElementById('rtWatch').value;
+  const prod = document.getElementById('rtProd');
+  prod.innerHTML = '<option value="">— 商品 —</option>';
+  document.getElementById('rtBox').textContent = '加载中…';
+  if (!wid) return;
+  try {
+    const d = await j('GET','/api/v1/监控/排名趋势?watch_id=' + wid);
+    window._rtData = d;
+    prod.innerHTML = d.products.map(p =>
+      `<option value="${esc(p.product_id)}">${esc(p.title || p.product_id)}（排名 ${p.rank==null?'-':p.rank}）</option>`
+    ).join('') || '<option value="">暂无商品</option>';
+    document.getElementById('rtBox').textContent = '已加载 ' + d.products.length + ' 个商品，选择商品后点「查看」。';
+  } catch(e) { document.getElementById('rtBox').textContent = '加载失败'; }
+}
+async function loadRankTrend(){
+  const pid = document.getElementById('rtProd').value;
+  const d = window._rtData;
+  if (!d || !pid) { document.getElementById('rtMsg').textContent = '请先选择关注项与商品'; return; }
+  const recs = (d.records || []).filter(r => r.product_id === pid);
+  if (!recs.length) { document.getElementById('rtBox').textContent = '该商品暂无历史快照'; return; }
+  const ranks = recs.map(r=>r.rank).filter(r=>r!=null);
+  const minR = ranks.length ? Math.min(...ranks) : 1, maxR = ranks.length ? Math.max(...ranks) : 1;
+  const W = 520, H = 130, pad = 18;
+  const xs = (i) => pad + (recs.length>1 ? i/(recs.length-1)*(W-2*pad) : W/2);
+  const ys = (rank) => { if (rank==null) return null; const span = Math.max(maxR-minR,1); return pad + (maxR-rank)/span*(H-2*pad); };
+  let poly = [], dots = '';
+  recs.forEach((r,i)=>{ const y = ys(r.rank); if (y!=null) poly.push(`${xs(i).toFixed(1)},${y.toFixed(1)}`); });
+  dots = recs.map((r,i)=>{ const y=ys(r.rank); if(y==null) return ''; const t=String(r.checked_at||'').replace('T',' ').slice(5,16); return `<circle cx="${xs(i).toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="var(--ok)"><title>${esc(t)} 第${r.rank}名</title></circle>`; }).join('');
+  let chart = '';
+  if (poly.length>=1) {
+    const line = poly.length>=2 ? `<polyline points="${poly.join(' ')}" fill="none" stroke="var(--accent2)" stroke-width="2.2"/>` : '';
+    chart = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:130px;background:var(--stat-bg);border-radius:8px;margin-top:6px">
+      <text x="${pad}" y="${pad+10}" font-size="10" fill="var(--muted)">第${minR}名(最好)</text>
+      <text x="${pad}" y="${H-pad-2}" font-size="10" fill="var(--muted)">第${maxR}名</text>
+      ${line}${dots}</svg>`;
+  }
+  const rows = recs.map(r => {
+    const t = String(r.checked_at||'').replace('T',' ').slice(5,16);
+    return `<div class="trend-row"><span>${esc(t)}</span><span>${r.rank!=null?('第'+r.rank+'名'):'-'}</span><span class="muted">¥${r.price!=null?r.price:'-'}</span><span class="muted">${r.sales!=null?('销量'+r.sales):''}</span></div>`;
+  }).join('');
+  document.getElementById('rtBox').innerHTML = chart + '<div style="margin-top:6px">' + rows + '</div>';
+  document.getElementById('rtMsg').textContent = recs.length + ' 条快照（名次越低越好，折线向上=排名上升）';
+}
+async function loadAiStatus(){
+  try {
+    const d = await j('GET','/api/v1/ai/状态');
+    document.getElementById('aiStatus').textContent = d.configured ? ('已配置：' + d.model) : '未配置 Key（点下面按钮会提示）';
+  } catch(e){ document.getElementById('aiStatus').textContent = '状态查询失败'; }
+}
+async function runAi(){
+  const kw = document.getElementById('aiKw').value.trim();
+  document.getElementById('aiMsg').textContent = '分析中（数据收集 + AI 生成，约 10-40 秒）…';
+  document.getElementById('aiBox').textContent = '';
+  try {
+    const d = await j('POST','/api/v1/ai/选品分析?keyword=' + encodeURIComponent(kw) + '&fresh=true');
+    if (d.status === 'needs_key') {
+      document.getElementById('aiBox').textContent = '需要先配置大模型 Key：' + d.message;
+      document.getElementById('aiMsg').textContent = '';
+      return;
+    }
+    if (d.status === 'error') { document.getElementById('aiBox').textContent = d.message; document.getElementById('aiMsg').textContent=''; return; }
+    document.getElementById('aiBox').textContent = d.analysis;
+    document.getElementById('aiMsg').textContent = '耗时 ' + (d.latency_ms/1000).toFixed(1) + ' 秒 ｜ 模型 ' + d.model + ' ｜ ' + d.note;
+  } catch(e){ document.getElementById('aiMsg').textContent = '分析失败：' + e; }
+}
+async function runMonitor(){
+  const btn = document.getElementById('runBtn'); btn.disabled = true; btn.textContent = '巡检中…';
+  try {
+    const d = await j('POST','/api/v1/monitor/run');
+    document.getElementById('watchMsg').textContent = '巡检完成：检查 ' + d.checked_items + ' 个商品，告警 ' + d.alerts + ' 条';
+  } catch(e) { document.getElementById('watchMsg').textContent = '巡检失败：' + e; }
+  btn.disabled = false; btn.textContent = '立即巡检';
+  loadMonitor(); loadAlerts(); loadMovers();
+}
+async function addWatch(){
+  const tp = parseFloat(document.getElementById('tgtPrice').value);
+  const body = { platform: document.getElementById('pf').value, mode:'keyword',
+    category: document.getElementById('kw').value, top_n: parseInt(document.getElementById('topn').value)||10,
+    target_price: isNaN(tp) ? null : tp };
+  try {
+    const d = await j('POST','/api/v1/monitor/watches', body);
+    document.getElementById('watchMsg').textContent = d.id ? '已添加关注（编号 ' + d.id + '，目标价 ' + (tp?'¥'+tp:'未设') + '）' : '添加失败';
+  } catch(e) { document.getElementById('watchMsg').textContent = '添加失败：' + e; }
+  loadMonitor(); loadRtWatches();
+}
+function profitRow(label, value, tip, opts){
+  return `<div class="row" title="${esc(tip||'')}"><span>${label}</span><span${opts||''}>${value}</span></div>`;
+}
+function profitSection(label){
+  return `<div style="margin-top:8px;font-weight:600;color:var(--accent2);font-size:12px;border-bottom:1px solid var(--line);padding-bottom:2px">${label}</div>`;
+}
+let FX_RATES = {};
+let FX_META = {source:'', updated:''};
+async function loadFx(){
+  const info = document.getElementById('pfFxInfo');
+  info.textContent = '刷新中…';
+  try {
+    const d = await j('GET','/api/v1/工具/汇率');
+    FX_RATES = d.rates||{};
+    FX_META = {source:d.source||'', updated:String(d.updated||'').slice(0,10)};
+    fillFx();
+  } catch(e){ info.textContent = '汇率加载失败，可手动填写'; }
+}
+function fillFx(){
+  const c = document.getElementById('pfCur').value;
+  const fx = document.getElementById('pfFx');
+  const info = document.getElementById('pfFxInfo');
+  fx.disabled = (c==='CNY');
+  if (c==='CNY') { fx.value = '1'; info.textContent = '人民币结算：无需汇率换算'; return; }
+  const r = FX_RATES[c];
+  if (r) fx.value = r;
+  info.textContent = r ? ('1 '+c+' ≈ ¥'+r+' · '+FX_META.updated+'（'+FX_META.source+'），可手动改')
+                       : '暂无汇率，请手动填写 1 '+c+' = ? 人民币';
+}
+function moneyCNY(v){ return '¥'+Number(v).toFixed(2); }
+function moneyLocal(v, c){ return c==='CNY' ? moneyCNY(v) : Number(v).toFixed(2)+' '+c; }
+async function calcProfit(){
+  const sp = parseFloat(document.getElementById('pfSale').value);
+  const cs = parseFloat(document.getElementById('pfCost').value);
+  const sh = parseFloat(document.getElementById('pfShip').value)||0;
+  const cm = (parseFloat(document.getElementById('pfComm').value)||0)/100;
+  const ot = (parseFloat(document.getElementById('pfOther').value)||0)/100;
+  const tx = (parseFloat(document.getElementById('pfTax').value)||0)/100;
+  const qty = parseInt(document.getElementById('pfQty').value)||1;
+  const cur = document.getElementById('pfCur').value||'CNY';
+  const fx = parseFloat(document.getElementById('pfFx').value);
+  const mode = document.getElementById('pfMode').value||'手动';
+  const ff = parseFloat(document.getElementById('pfFulfill').value)||0;
+  const st = parseFloat(document.getElementById('pfStorage').value)||0;
+  const py = (parseFloat(document.getElementById('pfPayFee').value)||0)/100;
+  const xl = (parseFloat(document.getElementById('pfFxLoss').value)||0)/100;
+  const pk = parseFloat(document.getElementById('pfPack').value)||0;
+  const ac = (parseFloat(document.getElementById('pfAcos').value)||0)/100;
+  const lg = parseFloat(document.getElementById('pfLong').value)||0;
+  const rm = parseFloat(document.getElementById('pfRemoval').value)||0;
+  const dt = (parseFloat(document.getElementById('pfDuty').value)||0)/100;
+  const rr = (parseFloat(document.getElementById('pfReturn').value)||0)/100;
+  const fxd = parseFloat(document.getElementById('pfFixed').value)||0;
+  if (!sp || !cs) { document.getElementById('pfMsg').textContent = '请填售价和采购成本'; return; }
+  if (cur!=='CNY' && !(fx>0)) { document.getElementById('pfMsg').textContent = '请填写汇率（1 '+cur+' = ? 人民币）或点「刷新汇率」'; return; }
+  try {
+    let url = '/api/v1/工具/毛利估算?sale_price='+sp+'&cost='+cs+'&shipping='+sh+'&commission_rate='+cm+'&other_rate='+ot+'&tax_rate='+tx+'&quantity='+qty+'&currency='+cur
+      +'&fulfillment='+encodeURIComponent(mode)+'&fulfillment_fee='+ff+'&storage_fee='+st+'&payment_fee_rate='+py+'&fx_loss_rate='+xl+'&packaging_fee='+pk+'&acos_rate='+ac+'&long_storage_fee='+lg+'&removal_fee='+rm+'&duty_rate='+dt+'&return_rate='+rr+'&fixed_fee='+fxd;
+    if (cur!=='CNY' && fx>0) url += '&fx_rate='+fx;
+    const d = await j('GET', url);
+    const color = d.gross_profit>=0 ? 'var(--ok)' : 'var(--warn)';
+    const tag = d.gross_profit>=0 ? '盈' : '亏';
+    const local = (cur!=='CNY');
+    const fxr = d.fx_rate||1;
+    document.getElementById('pfBox').innerHTML =
+      profitRow('售价（含税到手价）', moneyLocal(d.sale_price, cur)+' / 件' + (local?' ≈ '+moneyCNY(d.sale_price*fxr):''), '你在店铺里标出的单价（结算币种）') +
+      profitRow('运营模式', esc(d.fulfillment||'手动'), '当前套用的运营/发货模式（如 Amazon FBA / FBM）') +
+      profitRow('销售件数',d.quantity+' 件','本次按几件合计估算（各项费用随件数累计）') +
+      profitRow('销售收入', moneyLocal(d.sale_total, cur) + (local?' ≈ '+moneyCNY(d.sale_total_cny):''), '售价 × 件数') +
+      profitSection('平台费用') +
+      profitRow('平台佣金', moneyLocal(d.commission, cur) + (local?' ≈ '+moneyCNY(d.commission*fxr):'') + '（'+(d.commission_rate*100)+'% × 售价）','平台抽成，如淘宝客约 5%、Amazon 约 15%（按实际类目）') +
+      profitRow('其他费用', moneyLocal(d.other_fee, cur) + (local?' ≈ '+moneyCNY(d.other_fee*fxr):'') + '（'+(ot*100)+'% × 售价）','包装 / 支付 / 售后等杂费（履约费单列）') +
+      profitRow('广告费', '¥'+d.ad_fee+'（ACOS '+(d.ad_fee_rate*100)+'% × 收入折人民币）','广告支出（ACOS），各平台广告/推广费') +
+      profitRow('收款手续费', moneyLocal(d.payment_fee, cur) + (local?' ≈ '+moneyCNY(d.payment_fee*fxr):'') + '（'+(d.payment_fee_rate*100)+'% × 收入）','收款/结汇手续费，如万里汇约 0.5%') +
+      profitSection('物流仓储') +
+      profitRow('采购成本','¥'+d.cost+' / 件','进货价 / 生产成本（人民币）') +
+      profitRow('运费','¥'+d.shipping+' / 件','每件物流费（人民币）') +
+      profitRow('打包费', '¥'+d.packaging_fee + (pk?('（'+pk+' 元/件）'):''),'包装/耗材费（人民币）') +
+      profitRow('履约费', moneyLocal(d.fulfillment_fee, cur) + (local?' ≈ '+moneyCNY(d.fulfillment_fee*fxr):''),'平台履约费/件（如 Amazon FBA 履行费，结算币种）') +
+      profitRow('月仓储费', moneyLocal(d.storage_fee, cur) + (local?' ≈ '+moneyCNY(d.storage_fee*fxr):''),'海外仓/平台仓 单位月仓储费（结算币种）') +
+      profitRow('长期仓储费', moneyLocal(d.long_storage_fee, cur) + (local?' ≈ '+moneyCNY(d.long_storage_fee*fxr):''),'长期/超龄库存仓储费（结算币种/件·月，如 Amazon 超龄库存约 $0.15）') +
+      profitRow('移除/弃置费', moneyLocal(d.removal_fee, cur) + (local?' ≈ '+moneyCNY(d.removal_fee*fxr):''),'移除/弃置费（结算币种/件，一次性，如 Amazon 标准件约 $0.55）') +
+      profitSection('税务资金') +
+      profitRow('税费', moneyLocal(d.tax, cur) + (local?' ≈ '+moneyCNY(d.tax*fxr):'') + '（'+(tx*100)+'% × 售价）','国内一般按增值税 13% 估算；跨境站点多为 0%') +
+      profitRow('关税', '¥'+d.duty+'（'+(d.duty_rate*100)+'% × 成本）','进口关税/增值税，占采购成本比例（如欧盟 VAT 约 20%）') +
+      profitRow('退货损失', '¥'+d.return_cost+'（'+(d.return_rate*100)+'% × 收入，按全损简化）','退货/退款率造成的损失') +
+      profitRow('汇损', '¥'+d.fx_loss+'（'+(d.fx_loss_rate*100)+'% × 收入折人民币）','结汇汇率损失') +
+      profitRow('一次性固定费', '¥'+d.fixed_fee + (local?'（'+cur+'）':''),'平台月租/保证金分摊等一次性固定费用') +
+      `<div style="border-top:1px dashed var(--line);margin:6px 0"></div>` +
+      profitRow('总成本','¥'+d.total_cost + (local?'（外币费用已折人民币）':''),'成本+运费+打包+佣金+其他+广告+收付费+履约+仓储+长期仓储+移除+税+关税+退货+汇损+固定费（人民币口径）') +
+      profitRow('毛利','¥'+d.gross_profit+'（'+tag+'）' + (local?' ≈ '+moneyLocal(d.gross_profit_local, cur):''),'销售收入折人民币 − 总成本；负数 = 亏损',` style="font-weight:600;color:${color}"`) +
+      profitRow('毛利率',d.gross_margin+'%','毛利 ÷ 销售收入，衡量利润空间') +
+      profitRow('ROI',d.roi+'%','毛利 ÷（成本+运费+打包），衡量投入回报率');
+    document.getElementById('pfMsg').textContent = '毛利率 '+d.gross_margin+'% · 单件净利 ¥'+d.gross_profit + (local?'（≈ '+moneyLocal(d.gross_profit_local, cur)+'）':'') + ' · 汇率 '+d.fx_rate+'（'+d.fx_source+'）';
+  } catch(e){ document.getElementById('pfMsg').textContent = '计算失败'; }
+}
+let FULFILL_MODES = [];
+let FULFILL_TIERS = [];
+let FULFILL_CATS = [];
+let FULFILL_TPL = [];
+async function loadFulfillment(){
+  try {
+    const d = await j('GET','/api/v1/工具/运营模式');
+    FULFILL_MODES = d.items||[];
+    FULFILL_TIERS = d.fba_tiers||[];
+    FULFILL_CATS = d.category_presets||[];
+    FULFILL_TPL = d.templates||[];
+    const groups = {};
+    (FULFILL_MODES||[]).forEach(m => { (groups[m.platform]=groups[m.platform]||[]).push(m); });
+    const platNames = {'amazon_open':'Amazon','tiktok_shop':'TikTok Shop','shopee_open':'Shopee','aliexpress_open':'AliExpress','jd':'京东','taobao':'淘宝/天猫','pdd':'拼多多','douyin':'抖音小店'};
+    document.getElementById('pfMode').innerHTML = '<option value="">手动设置</option>' +
+      Object.entries(groups).map(([pf, arr]) =>
+        '<optgroup label="'+esc(platNames[pf]||pf)+'">' +
+        arr.map(m => '<option value="'+esc(m.key)+'">'+esc(m.name)+'</option>').join('') +
+        '</optgroup>').join('');
+    document.getElementById('pfTier').innerHTML = '<option value="">FBA 分档（选 Amazon FBA 后可用）</option>' +
+      FULFILL_TIERS.map(t => '<option value="'+esc(t.key)+'">'+esc(t.name)+'（$'+t.fee+'）</option>').join('');
+    document.getElementById('pfCat').innerHTML = '<option value="">类目预设（自动填ACOS）</option>' +
+      FULFILL_CATS.map(c => '<option value="'+esc(c.key)+'">'+esc(c.name)+'（ACOS '+Math.round(c.acos_rate*100)+'%）</option>').join('');
+    let tplHtml = '<option value="">手动设置</option>';
+    try {
+      const my = JSON.parse(localStorage.getItem('shopmonitor_my_tpl')||'[]')||[];
+      if (my.length) tplHtml += '<optgroup label="我的模板">' + my.map(t => '<option value="'+esc(t.key)+'">⭐ '+esc(t.name)+'</option>').join('') + '</optgroup>';
+    } catch(e){}
+    tplHtml += (d.templates||[]).map(t => '<option value="'+esc(t.key)+'">'+esc(t.name)+'</option>').join('');
+    document.getElementById('pfTemplate').innerHTML = tplHtml;
+  } catch(e){}
+}
+function applyTier(){
+  const t = (FULFILL_TIERS||[]).find(x => x.key===document.getElementById('pfTier').value);
+  if (t) document.getElementById('pfFulfill').value = t.fee;
+}
+function applyCategoryPreset(){
+  const key = document.getElementById('pfCat').value;
+  const c = (FULFILL_CATS||[]).find(x => x.key===key);
+  if (!c) return;
+  document.getElementById('pfAcos').value = Math.round(c.acos_rate*10000)/100;
+  document.getElementById('pfModeInfo').textContent = '已套用类目「'+c.name+'」：ACOS '+(c.acos_rate*100)+'%（'+c.note+'）';
+}
+function applyTemplate(){
+  const key = document.getElementById('pfTemplate').value;
+  let t = (FULFILL_TPL||[]).find(x => x.key===key);
+  if (!t) {
+    try {
+      const my = JSON.parse(localStorage.getItem('shopmonitor_my_tpl')||'[]')||[];
+      t = my.find(x => x.key===key);
+    } catch(e){ t = null; }
+  }
+  if (!t) return;
+  if (t.is_custom) {
+    const p = t.params||{};
+    document.getElementById('pfMode').value = p.mode||'';
+    document.getElementById('pfCur').value = p.currency||'CNY'; fillFx();
+    document.getElementById('pfComm').value = p.commission_rate||0;
+    document.getElementById('pfOther').value = p.other_rate||0;
+    document.getElementById('pfTax').value = p.tax_rate||0;
+    document.getElementById('pfFulfill').value = p.fulfillment_fee||0;
+    document.getElementById('pfStorage').value = p.storage_fee||0;
+    document.getElementById('pfLong').value = p.long_storage_fee||0;
+    document.getElementById('pfRemoval').value = p.removal_fee||0;
+    document.getElementById('pfPayFee').value = p.payment_fee_rate||0;
+    document.getElementById('pfFxLoss').value = p.fx_loss_rate||0;
+    document.getElementById('pfPack').value = p.packaging_fee||0;
+    document.getElementById('pfAcos').value = p.acos_rate||0;
+    document.getElementById('pfDuty').value = p.duty_rate||0;
+    document.getElementById('pfReturn').value = p.return_rate||0;
+    document.getElementById('pfFixed').value = p.fixed_fee||0;
+    if (p.tier) { document.getElementById('pfTier').value = p.tier; applyTier(); }
+    document.getElementById('pfModeInfo').textContent = '已应用我的模板「'+t.name+'」';
+    return;
+  }
+  // 1) 运营模式（含佣金/其他/税率/履约/仓储/长期仓储/移除/关税/退货）
+  document.getElementById('pfMode').value = t.mode||'';
+  applyFulfillment();
+  // 2) 结算币种 + 汇率
+  document.getElementById('pfCur').value = t.currency||'CNY';
+  fillFx();
+  // 3) FBA 分档（若有）
+  if (t.tier) { document.getElementById('pfTier').value = t.tier; applyTier(); }
+  // 4) 高级参数
+  document.getElementById('pfPayFee').value = Math.round((t.payment_fee_rate||0)*10000)/100;
+  document.getElementById('pfFxLoss').value = Math.round((t.fx_loss_rate||0)*10000)/100;
+  document.getElementById('pfPack').value = t.packaging_fee||0;
+  document.getElementById('pfAcos').value = Math.round((t.acos_rate||0)*10000)/100;
+  document.getElementById('pfDuty').value = Math.round((t.duty_rate||0)*10000)/100;
+  document.getElementById('pfReturn').value = Math.round((t.return_rate||0)*10000)/100;
+  document.getElementById('pfFixed').value = t.fixed_fee||0;
+  document.getElementById('pfModeInfo').textContent = '已应用「'+t.name+'」：'+(t.note||'');
+}
+function applyFulfillment(){
+  const key = document.getElementById('pfMode').value;
+  const m = (FULFILL_MODES||[]).find(x => x.key===key);
+  const tier = document.getElementById('pfTier');
+  if (!m) { tier.disabled = true; return; }
+  document.getElementById('pfComm').value = Math.round(m.commission_rate*10000)/100;
+  document.getElementById('pfOther').value = Math.round(m.other_rate*10000)/100;
+  document.getElementById('pfTax').value = Math.round(m.tax_rate*10000)/100;
+  document.getElementById('pfFulfill').value = m.fulfillment_fee;
+  document.getElementById('pfStorage').value = m.storage_fee;
+  document.getElementById('pfLong').value = m.long_storage_fee||0;
+  document.getElementById('pfRemoval').value = m.removal_fee||0;
+  document.getElementById('pfDuty').value = Math.round((m.duty_rate||0)*10000)/100;
+  document.getElementById('pfReturn').value = Math.round((m.return_rate||0)*10000)/100;
+  if (m.shipping_hint) document.getElementById('pfShip').placeholder = m.shipping_hint;
+  if (key==='amazon_fba') {
+    tier.disabled = false;
+    if (!tier.value) tier.value = 'large_standard_1lb';
+    applyTier();
+  } else {
+    tier.disabled = true; tier.value = '';
+  }
+  document.getElementById('pfModeInfo').textContent = '已套用「'+m.name+'」：佣金 '+(m.commission_rate*100)+'%、其他 '+(m.other_rate*100)+'%、税 '+(m.tax_rate*100)+'%、履约费 '+m.fulfillment_fee+'、仓储费 '+m.storage_fee+'、长期仓储 '+m.long_storage_fee+'、移除 '+m.removal_fee+'（示例值，可手动改）';
+}
+async function loadFocus(){
+  const parts = [];
+  try {
+    const st = await j('GET','/api/v1/监控/状态');
+    parts.push(['未读告警', st.unread_alerts ?? '-']);
+    parts.push(['关注数', st.watch_count ?? '-']);
+    parts.push(['巡检间隔', (st.interval_sec||0)+'s']);
+  } catch(e){}
+  try {
+    const hot = await j('GET','/api/v1/uumit/热搜');
+    const top = (hot.items||[])[0];
+    if (top) parts.push(['今日热搜', top.title]);
+  } catch(e){}
+  try {
+    const ov = await j('GET','/api/v1/工具/毛利概览?limit=1');
+    if (ov.items && ov.items[0]) parts.push(['最高预估毛利', '¥'+(ov.items[0].estimated_profit??0)]);
+  } catch(e){}
+  document.getElementById('focusCards').innerHTML = parts.map(p =>
+    `<div class="stat"><div class="k">${esc(p[0])}</div><div class="v" style="font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(String(p[1]))}</div></div>`
+  ).join('') || '暂无数据';
+}
+async function loadBlueOcean(){
+  document.getElementById('boMsg').textContent = '分析中…';
+  try {
+    const d = await j('GET','/api/v1/工具/蓝海选词');
+    const items = d.items||[];
+    document.getElementById('boList').innerHTML = items.length ? items.map(x =>
+      `<div class="row"><span><span class="badge">${x.rank}</span> ${esc(x.word)} <span class="muted">热度${x.heat}</span></span>` +
+      `<span><b style="color:${x.score>=50?'var(--ok)':'var(--warn)'}">蓝海指数 ${x.score}</b> <span class="muted">联想词 ${x.related_count<0?'-':x.related_count}</span> · ${esc(x.suggest)}</span></div>`
+    ).join('') : '<div class="muted">暂无（UUMit 热搜不可用）</div>';
+    document.getElementById('boMsg').textContent = d.note || '';
+  } catch(e){ document.getElementById('boMsg').textContent = '分析失败'; }
+}
+async function loadPicks(){
+  try {
+    const d = await j('GET','/api/v1/选品库');
+    const items = d.items || [];
+    document.getElementById('pkList').innerHTML = items.length ? items.map(x =>
+      `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">` +
+      `<b>${esc(x.platform)}</b> ${esc(x.title||x.product_id)} <span class="muted">¥${x.price??'-'}</span> ` +
+      `<span class="muted">${esc(x.keyword||'')}</span></span>` +
+      `<select onchange="updatePickStatus(${x.id}, this.value)" style="padding:3px 6px;font-size:12px">` +
+      `${['考察中','可上架','已上架','放弃'].map(s=>`<option value="${s}" ${s===x.status?'selected':''}>${s}</option>`).join('')}</select> ` +
+      `<button class="btn btn-s" onclick="delPick(${x.id})" style="padding:3px 8px">删</button></div>`
+    ).join('') : '<div class="muted">暂无收藏。可从榜单/筛选导入或手动添加。</div>';
+    document.getElementById('pkMsg').textContent = '共 ' + items.length + ' 条';
+  } catch(e){ document.getElementById('pkList').textContent = '加载失败'; }
+}
+async function updatePickStatus(id, status){
+  try { await j('PATCH','/api/v1/选品库/'+id, {status}); loadPicks(); } catch(e){ document.getElementById('pkMsg').textContent='更新失败'; }
+}
+async function delPick(id){
+  try { await j('DELETE','/api/v1/选品库/'+id); loadPicks(); } catch(e){ document.getElementById('pkMsg').textContent='删除失败'; }
+}
+async function addPick(){
+  const body = {
+    platform: document.getElementById('pkPf').value,
+    product_id: document.getElementById('pkId').value.trim(),
+    title: document.getElementById('pkTitle').value.trim(),
+    price: parseFloat(document.getElementById('pkPrice').value)||null,
+    status: '考察中'
+  };
+  if (!body.product_id) { document.getElementById('pkMsg').textContent = '请填商品ID'; return; }
+  try {
+    const d = await j('POST','/api/v1/选品库', body);
+    document.getElementById('pkMsg').textContent = d.message;
+    document.getElementById('pkId').value=''; document.getElementById('pkTitle').value=''; document.getElementById('pkPrice').value='';
+    loadPicks();
+  } catch(e){ document.getElementById('pkMsg').textContent='添加失败：'+e; }
+}
+async function importPicksFromRank(){
+  const pf = document.getElementById('flPf').value;
+  const cat = document.getElementById('flCat').value.trim() || '全部商品';
+  document.getElementById('pkMsg').textContent = '导入中…';
+  try {
+    const d = await j('GET','/api/v1/rank/' + pf + '?category=' + encodeURIComponent(cat) + '&limit=10');
+    const items = d.items || [];
+    for (const it of items.slice(0,10)) {
+      await j('POST','/api/v1/选品库', {platform: pf, product_id: it.product_id, title: it.title, price: it.price, keyword: cat});
+    }
+    document.getElementById('pkMsg').textContent = '已导入 ' + Math.min(items.length,10) + ' 条到选品库（' + pf + '/' + cat + '）';
+    loadPicks();
+  } catch(e){ document.getElementById('pkMsg').textContent='导入失败：'+e; }
+}
+async function exportPicks(){
+  try {
+    const d = await j('GET','/api/v1/选品库');
+    const items = d.items||[];
+    const head = ['平台','商品ID','标题','价格','状态','备注','关键词','更新时间'];
+    const rows = items.map(x => [x.platform, x.product_id, x.title, x.price, x.status, x.note, x.keyword, x.updated_at]);
+    const csv = '﻿' + [head, ...rows].map(r => r.map(v => '"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='选品库.csv'; a.click();
+    document.getElementById('pkMsg').textContent = '已导出 '+items.length+' 条';
+  } catch(e){ document.getElementById('pkMsg').textContent='导出失败：'+e; }
+}
+function goPage(url){ window.open(url,'_blank'); }
+function goSection(text){
+  const h = Array.from(document.querySelectorAll('.card h2')).find(x => x.textContent.includes(text));
+  if (h) h.closest('.card').scrollIntoView({behavior:'smooth', block:'start'});
+}
+async function pickFromList(platform, product_id, title, price){
+  try {
+    const d = await j('POST','/api/v1/选品库', {platform: platform, product_id: product_id, title: title, price: price?parseFloat(price):null, status:'考察中'});
+    document.getElementById('smMsg').textContent = d.message || '已收藏';
+    document.getElementById('srcMsg').textContent = d.message || '已收藏';
+    loadPicks();
+  } catch(e){}
+}
+async function loadShopMonitor(){
+  const pf = document.getElementById('smPf').value;
+  const sid = document.getElementById('smShop').value.trim();
+  document.getElementById('smMsg').textContent = '拉取中…';
+  try {
+    const d = await j('GET','/api/v1/工具/店铺监控?platform='+pf+'&shop_id='+encodeURIComponent(sid)+'&limit=20');
+    if (!d.ok) { document.getElementById('smList').textContent=''; document.getElementById('smMsg').textContent = d.message||'拉取失败'; return; }
+    const items = d.items||[];
+    document.getElementById('smList').innerHTML = items.map(x =>
+      `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(x.title)}">${esc(x.title)}</span>` +
+      `<span class="muted">¥${x.price??'-'}｜销量${x.sales??'-'}</span>` +
+      `<button class="btn btn-s" onclick="pickFromList('${pf}','${esc(x.product_id)}','${esc(x.title)}','${x.price??''}')">收藏</button></div>`
+    ).join('') || '<div class="muted">该店铺暂无在售商品</div>';
+    document.getElementById('smMsg').textContent = '店铺 ' + (d.shop_id||'') + ' 商品 ' + items.length + ' 条（' + d.source + '）';
+  } catch(e){ document.getElementById('smMsg').textContent = '拉取失败：' + e; }
+}
+async function loadSource(){
+  const kw = document.getElementById('srcKw').value.trim();
+  if (!kw) { document.getElementById('srcMsg').textContent = '请输入商品词'; return; }
+  document.getElementById('srcMsg').textContent = '搜索中…';
+  try {
+    const d = await j('GET','/api/v1/工具/找货源?keyword='+encodeURIComponent(kw)+'&limit=20');
+    if (!d.ok) { document.getElementById('srcList').textContent=''; document.getElementById('srcMsg').textContent = d.message||'搜索失败'; return; }
+    const items = d.items||[];
+    document.getElementById('srcList').innerHTML = items.map(x =>
+      `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(x.title)}">${esc(x.title)}</span>` +
+      `<span class="muted">¥${x.price??'-'}｜${esc(x.shop_name||'')}</span>` +
+      `<button class="btn btn-s" onclick="pickFromList('alibaba_open','${esc(x.product_id)}','${esc(x.title)}','${x.price??''}')">收藏</button></div>`
+    ).join('') || '<div class="muted">未找到货源</div>';
+    document.getElementById('srcMsg').textContent = '找到 ' + items.length + ' 个货源（1688）';
+  } catch(e){ document.getElementById('srcMsg').textContent = '搜索失败：' + e; }
+}
+async function loadRankTrend(){
+  const pf = document.getElementById('rtPf').value;
+  const cat = document.getElementById('rtCat').value.trim();
+  const days = document.getElementById('rtDays').value;
+  document.getElementById('rtMsg').textContent = '加载中…';
+  try {
+    const d = await j('GET','/api/v1/工具/榜单趋势?platform='+pf+'&category='+encodeURIComponent(cat)+'&days='+days);
+    const items = d.items||[];
+    document.getElementById('rtBox').innerHTML = items.length ? items.map(x => {
+      const mx = Math.max(...items.map(y=>y.avg_price||0),1);
+      const w = Math.max(2, Math.round(((x.avg_price||0))/mx*100));
+      return `<div class="row"><span>${esc(x.date)}</span><span>商品${x.count}｜均价¥${x.avg_price??'-'}</span><div class="trend-bar" style="width:${w}%"></div><span class="muted">新品+${x.new_count}（${x.new_rate}%）</span></div>`;
+    }).join('') : '<div class="muted">暂无快照：先去拉几次该平台榜单（每天一次），隔天查看趋势。</div>';
+    document.getElementById('rtMsg').textContent = items.length ? ('共 ' + items.length + ' 天快照') : '';
+  } catch(e){ document.getElementById('rtMsg').textContent='加载失败'; }
+}
+async function genPeriod(period){
+  document.getElementById('periodMsg').textContent = '生成中…';
+  try {
+    const d = await j('POST','/api/v1/监控/周期报告?period='+period);
+    document.getElementById('periodMsg').innerHTML = '已生成：<a class="link" href="/api/v1/监控/周期报告?period='+period+'" target="_blank">查看'+(period==='week'?'周报':'月报')+'</a> <a class="link" href="/api/v1/监控/周期报告?period='+period+'&fmt=pdf" target="_blank">PDF</a>';
+  } catch(e){ document.getElementById('periodMsg').textContent='生成失败：'+e; }
+}
+async function markAllRead(){
+  try { await j('POST','/api/v1/监控/告警/已读', {}); loadAlerts(); loadMonitor(); loadFocus(); } catch(e){}
+}
+function saveTemplate(){
+  const name = prompt('模板名称（如：我的美国FBA标准件）');
+  if (!name) return;
+  const params = {
+    mode: document.getElementById('pfMode').value,
+    currency: document.getElementById('pfCur').value,
+    tier: document.getElementById('pfTier').value,
+    commission_rate: parseFloat(document.getElementById('pfComm').value)||0,
+    other_rate: parseFloat(document.getElementById('pfOther').value)||0,
+    tax_rate: parseFloat(document.getElementById('pfTax').value)||0,
+    fulfillment_fee: parseFloat(document.getElementById('pfFulfill').value)||0,
+    storage_fee: parseFloat(document.getElementById('pfStorage').value)||0,
+    long_storage_fee: parseFloat(document.getElementById('pfLong').value)||0,
+    removal_fee: parseFloat(document.getElementById('pfRemoval').value)||0,
+    payment_fee_rate: parseFloat(document.getElementById('pfPayFee').value)||0,
+    fx_loss_rate: parseFloat(document.getElementById('pfFxLoss').value)||0,
+    packaging_fee: parseFloat(document.getElementById('pfPack').value)||0,
+    acos_rate: parseFloat(document.getElementById('pfAcos').value)||0,
+    duty_rate: parseFloat(document.getElementById('pfDuty').value)||0,
+    return_rate: parseFloat(document.getElementById('pfReturn').value)||0,
+    fixed_fee: parseFloat(document.getElementById('pfFixed').value)||0
+  };
+  try {
+    const list = JSON.parse(localStorage.getItem('shopmonitor_my_tpl')||'[]')||[];
+    list.push({key:'my_'+Date.now(), name:name, is_custom:true, params:params});
+    localStorage.setItem('shopmonitor_my_tpl', JSON.stringify(list));
+    document.getElementById('pfModeInfo').textContent = '已保存我的模板「'+name+'」';
+    loadFulfillment();
+  } catch(e){ document.getElementById('pfModeInfo').textContent='保存失败'; }
+}
+async function pickProduct(platform, pid, title, price){
+  try {
+    const d = await j('POST','/api/v1/选品库', {platform:platform, product_id:pid, title:decodeURIComponent(title||''), price:price?parseFloat(price):null, status:'考察中'});
+    document.getElementById('dtMsg').textContent = d.message || '已收藏';
+    loadPicks();
+  } catch(e){ document.getElementById('dtMsg').textContent='收藏失败'; }
+}
+function findSource(title){
+  goSection('1688 一键找货源');
+  document.getElementById('srcKw').value = decodeURIComponent(title||'');
+  loadSource();
+}
+async function watchProduct(platform, pid, title){
+  try {
+    const d = await j('POST','/api/v1/monitor/watches', {platform:platform, mode:'product', product_id:pid, alias:decodeURIComponent(title||'')});
+    document.getElementById('dtMsg').textContent = d.id ? '已监控此商品' : '监控失败';
+  } catch(e){ document.getElementById('dtMsg').textContent='监控失败'; }
+}
+const MODULES = [
+  {id:'sec-dash', name:'大盘数据', icon:'📊', find:'大盘数据'},
+  {id:'sec-hot', name:'热搜选词', icon:'🔥', find:'热搜 · 选词'},
+  {id:'sec-blue', name:'蓝海选词', icon:'🌊', find:'蓝海选词'},
+  {id:'sec-rankTrend', name:'榜单趋势', icon:'📈', find:'类目榜单趋势'},
+  {id:'sec-bands', name:'价格带分析', icon:'💹', find:'价格带分析'},
+  {id:'sec-compete', name:'竞争度分析', icon:'⚔️', find:'类目竞争度'},
+  {id:'sec-shopDyn', name:'竞品动态', icon:'🕐', find:'竞品店动态'},
+  {id:'sec-filter', name:'潜力筛选', icon:'🎯', find:'潜力商品筛选'},
+  {id:'sec-compare', name:'商品对比', icon:'⚖️', find:'商品对比'},
+  {id:'sec-tools', name:'毛利计算器', icon:'🧮', find:'毛利估算器'},
+  {id:'sec-movers', name:'今日变动榜', icon:'🔄', find:'今日变动榜'},
+  {id:'sec-watchOv', name:'关注总览', icon:'👀', find:'关注商品总览'},
+  {id:'sec-detail', name:'商品详情', icon:'📄', find:'商品详情'},
+  {id:'sec-hotTrend', name:'热搜趋势', icon:'📉', find:'热搜词热度趋势'},
+  {id:'sec-batch', name:'批量导入', icon:'📥', find:'批量导入监控'},
+  {id:'sec-shop', name:'店铺监控', icon:'🏬', find:'竞品店铺监控'},
+  {id:'sec-source', name:'1688找货源', icon:'🏭', find:'1688 一键找货源'},
+  {id:'sec-picks', name:'选品库', icon:'🗃️', find:'选品库'},
+  {id:'sec-ai', name:'AI选品', icon:'🤖', find:'AI 选品分析'},
+  {id:'sec-monitor', name:'监控告警', icon:'🚨', find:'监控'},
+  {id:'sec-settings', name:'设置·API', icon:'⚙️', find:'设置 · 平台 API 配置'},
+];
+const DOCK_PALETTE = [
+  ['#3b82f6','#60a5fa'], ['#2563eb','#38bdf8'], ['#f97316','#fbbf24'], ['#06b6d4','#22d3ee'],
+  ['#10b981','#34d399'], ['#8b5cf6','#a78bfa'], ['#6366f1','#818cf8'], ['#f59e0b','#fbbf24'],
+  ['#14b8a6','#2dd4bf'], ['#64748b','#94a3b8'], ['#0ea5e9','#38bdf8'], ['#f43f5e','#fb7185'],
+  ['#84cc16','#a3e635'], ['#7c3aed','#8b5cf6'], ['#78716c','#a8a29e'], ['#059669','#34d399'],
+  ['#c026d3','#e879f9'], ['#dc2626','#ef4444'], ['#475569','#94a3b8'], ['#1d4ed8','#3b82f6'],
+];
+function buildDock(){
+  const dock = document.getElementById('dock');
+  if (!dock) return;
+  const extra = [
+    {id:'home', name:'全部', icon:'⌂', action:"goHome()"},
+    {id:'dash', name:'大屏', icon:'📊', action:"goPage('/%E5%A4%A7%E5%B1%8F')"},
+    {id:'docs', name:'文档', icon:'📚', action:"goPage('/%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3')"},
+    {id:'report', name:'日报', icon:'📰', action:"genReport()"},
+  ];
+  const items = [...extra, ...MODULES.map(m => ({id: m.id, name: m.name, icon: m.icon, action: "goView('" + m.id + "')"}))];
+  dock.innerHTML = items.map((it, i) => {
+    const g = DOCK_PALETTE[i % DOCK_PALETTE.length];
+    return `<div class="dck" onclick="${it.action}" title="${esc(it.name)}"><span class="di" style="background:linear-gradient(135deg,${g[0]},${g[1]})">${it.icon}</span><span>${esc(it.name)}</span></div>`;
+  }).join('');
+}
+function initModules(){
+  MODULES.forEach(m => {
+    const h = Array.from(document.querySelectorAll('.card h2')).find(x => x.textContent.includes(m.find));
+    if (h) m.card = h.closest('.card');
+  });
+}
+function currentView(){
+  const m = (location.hash||'').match(/view=([\w-]+)/);
+  return m ? m[1] : '';
+}
+function applyView(){
+  const v = currentView();
+  const m = MODULES.find(x => x.id === v);
+  const bar = document.getElementById('viewBar');
+  document.querySelectorAll('.wrap .card').forEach(c => c.style.display = '');
+  if (m && m.card) {
+    document.querySelectorAll('.wrap .card').forEach(c => { if (c !== m.card) c.style.display = 'none'; });
+    bar.style.display = 'flex';
+    document.getElementById('viewTitle').textContent = m.icon + ' ' + m.name;
+    window.scrollTo(0, 0);
+  } else {
+    bar.style.display = 'none';
+  }
+}
+function goView(id){
+  location.hash = 'view=' + id;
+  applyView();
+}
+function goHome(){
+  history.replaceState(null, '', location.pathname);
+  applyView();
+}
+function openPalette(){
+  const pal = document.getElementById('palette');
+  pal.style.display = (pal.style.display === 'block') ? 'none' : 'block';
+  if (pal.style.display === 'block') { document.getElementById('palInput').value=''; renderPal(''); document.getElementById('palInput').focus(); }
+}
+function closePalette(){ document.getElementById('palette').style.display = 'none'; }
+function renderPal(q){
+  const list = MODULES.filter(m => m.name.includes(q) || m.id.includes(q));
+  document.getElementById('palList').innerHTML = list.map(m =>
+    `<div class="pal-item" onclick="goView('${m.id}');closePalette()"><span>${m.icon} ${m.name}</span><span class="muted">${m.id}</span></div>`
+  ).join('') || '<div class="muted" style="padding:10px">无匹配模块</div>';
+}
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
+  if (e.key === 'Escape') closePalette();
+});
+document.getElementById('palInput').addEventListener('input', e => renderPal(e.target.value.trim()));
+document.getElementById('palInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const first = document.querySelector('#palList .pal-item');
+    if (first) { first.click(); }
+  }
+});
+window.addEventListener('hashchange', applyView);
+async function loadPriceBands(){
+  const pf = document.getElementById('pbPf').value;
+  const cat = document.getElementById('pbCat').value.trim();
+  document.getElementById('pbMsg').textContent = '分析中…';
+  try {
+    const d = await j('GET','/api/v1/工具/价格带分析?platform='+pf+'&category='+encodeURIComponent(cat)+'&limit=100');
+    const rows = d.bands||[];
+    const maxC = Math.max(...rows.map(r=>r.count),1);
+    document.getElementById('pbBox').innerHTML =
+      `<div class="row"><span class="muted">共 ${d.total} 个商品</span><span class="muted">建议定价带：<b style="color:var(--ok)">¥${d.suggestion||'暂无'}</b></span></div>` +
+      rows.map(r => {
+        const w = Math.max(2, Math.round(r.count/maxC*100));
+        return `<div class="row"><span>¥${esc(r.band)}</span><span>${r.count} 个</span><div class="trend-bar" style="width:${w}%"></div><span class="muted">均销${r.avg_sales}｜评分${r.avg_rating??'-'}</span></div>`;
+      }).join('');
+    document.getElementById('pbMsg').textContent = '源：' + d.source + '｜建议定价带 ¥' + (d.suggestion||'-') + '（销量高且商品数适中）';
+  } catch(e){ document.getElementById('pbMsg').textContent='分析失败'; }
+}
+async function loadPriceBandsCompare(){
+  const cat = document.getElementById('pbCat').value.trim() || '数码';
+  document.getElementById('pbMsg').textContent = '跨平台对比中…';
+  try {
+    const d = await j('GET','/api/v1/工具/跨平台价格带?category='+encodeURIComponent(cat)+'&platforms=jd,taobao,pdd,shopee,amazon,aliexpress,mock&limit=60');
+    const items = d.items||[];
+    document.getElementById('pbCmpBox').innerHTML =
+      `<div class="row"><b>关键词：${esc(cat)}</b><span class="muted">按商品数降序</span></div>` +
+      items.map(x =>
+        `<div class="row"><span><b>${esc(x.name)}</b> <span class="muted">(${esc(x.platform)}·${x.source})</span></span>` +
+        `<span class="muted">商品${x.total}｜均价¥${x.avg_price??'-'}｜建议带 <b style="color:var(--ok)">${x.suggestion?('¥'+x.suggestion):'-'}</b>${x.error?'｜'+esc(x.error):''}</span></div>`
+      ).join('') || '<div class="muted">暂无</div>';
+    document.getElementById('pbMsg').textContent = '跨平台对比完成（' + items.length + ' 个平台）';
+  } catch(e){ document.getElementById('pbMsg').textContent='对比失败：' + e; }
+}
+async function loadCompetition(){
+  const pf = document.getElementById('cpPf').value;
+  const cat = document.getElementById('cpCat').value.trim();
+  document.getElementById('cpMsg').textContent = '分析中…';
+  try {
+    const d = await j('GET','/api/v1/工具/竞争度分析?platform='+pf+'&category='+encodeURIComponent(cat)+'&limit=100');
+    const g = d.score||0;
+    const lc = g<40 ? 'var(--ok)' : (g<65 ? 'var(--accent2)' : 'var(--warn)');
+    const bar = g<40 ? 'var(--ok)' : (g<65 ? 'var(--accent2)' : 'var(--warn)');
+    document.getElementById('cpBox').innerHTML =
+      `<div class="row"><span>竞争度指数</span><span><b style="color:${lc}">${d.score}（${esc(d.level)}）</b></span></div>` +
+      `<div class="trend-bar" style="width:${Math.max(2,Math.min(100,g))}%;background:${bar}"></div>` +
+      `<div class="row"><span>商品数 / 卖家数</span><span>${d.total} / ${d.seller_count}</span></div>` +
+      `<div class="row"><span>均价 / 中位价</span><span>¥${d.avg_price??'-'} / ¥${d.median_price??'-'}</span></div>` +
+      `<div class="row"><span>价格离散度</span><span>${d.price_cv??'-'}</span></div>` +
+      `<div class="row"><span>头部销量集中度(Top10)</span><span>${d.top10_sales_share??'-'}%</span></div>` +
+      `<div class="row"><span>平均评分</span><span>${d.avg_rating??'-'}</span></div>` +
+      `<div style="border-top:1px dashed var(--line);margin:6px 0"></div>` +
+      `<div class="muted">头部卖家：</div>` +
+      (d.top_sellers||[]).map(s => `<div class="row"><span>${esc(s.shop)}</span><span>${s.products} 款</span></div>`).join('') +
+      `<div class="muted" style="margin-top:6px">${esc(d.note||'')}</div>`;
+    document.getElementById('cpMsg').textContent = '源：' + d.source + '｜竞争度 ' + d.score + '（' + d.level + '）';
+  } catch(e){ document.getElementById('cpMsg').textContent='分析失败'; }
+}
+async function loadShopDyn(){
+  const pf = document.getElementById('sdPf').value;
+  const days = document.getElementById('sdDays').value;
+  document.getElementById('sdMsg').textContent = '加载中…';
+  try {
+    const d = await j('GET','/api/v1/工具/竞品动态?platform='+pf+'&days='+days+'&limit=40');
+    const ev = d.events||[];
+    const cm = {'新品上榜':'var(--accent2)','降价':'var(--ok)','涨价':'var(--warn)','销量飙升':'var(--accent2)','排名':'var(--muted)'};
+    document.getElementById('sdBox').innerHTML = ev.length ? ev.map(x => {
+      const t = String(x.time||'').replace('T',' ').slice(5,16);
+      return `<div class="row"><span><b style="color:${cm[x.type]||'var(--text)'}">${esc(x.type)}</b> ${esc(x.title)}</span><span class="muted">${t||'-'}｜${esc(x.detail||'')}</span></div>`;
+    }).join('') : '<div class="muted">暂无动态：先添加关注并运行巡检（至少两次快照）。</div>';
+    document.getElementById('sdMsg').textContent = '共 ' + ev.length + ' 条动态';
+  } catch(e){ document.getElementById('sdMsg').textContent='加载失败'; }
+}
+function mvRows(list){
+  if (!list || !list.length) return '<div class="muted">暂无</div>';
+  return list.map(x =>
+    `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(x.title)}">${esc(x.title)}</span>` +
+    `<span class="muted">¥${x.price_now??'-'} ${x.price_change_pct!=null?(x.price_change_pct>0?'+':'')+x.price_change_pct+'%':''}</span></div>`
+  ).join('');
+}
+async function loadMovers(){
+  try {
+    const d = await j('GET','/api/v1/监控/变动榜?limit=8');
+    document.getElementById('mvDrops').innerHTML = mvRows(d.drops);
+    document.getElementById('mvRises').innerHTML = mvRows(d.rises);
+    document.getElementById('mvSurges').innerHTML = (d.sales_surges||[]).map(x =>
+      `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(x.title)}">${esc(x.title)}</span><span class="muted">销量 +${x.sales_delta}</span></div>`
+    ).join('') || '<div class="muted">暂无</div>';
+    document.getElementById('moversMeta').textContent = '对比 ' + (d.total_compared||0) + ' 个商品快照';
+  } catch(e){}
+}
+const PLATS = ['mock','jd','pdd','douyin','taobao','shopee','amazon','aliexpress'];
+function platOpts(selId, val){
+  const sel = document.getElementById(selId);
+  sel.innerHTML = PLATS.map(p=>`<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('');
+}
+function profitParams(){
+  return {
+    cost_rate: (parseFloat(document.getElementById('flCostRate').value)||40)/100,
+    shipping: parseFloat(document.getElementById('flShip').value)||0,
+    acos: (parseFloat(document.getElementById('flAcos').value)||0)/100,
+    duty_rate: (parseFloat(document.getElementById('flDuty').value)||0)/100,
+    return_rate: (parseFloat(document.getElementById('flReturn').value)||0)/100
+  };
+}
+function saveProfitPrefs(pf){
+  try {
+    const p = profitParams();
+    localStorage.setItem('shopmonitor_profit_'+pf, JSON.stringify({cost_rate:p.cost_rate, shipping:p.shipping, acos:p.acos, duty_rate:p.duty_rate, return_rate:p.return_rate}));
+  } catch(e){}
+}
+function loadProfitPrefs(pf){
+  try {
+    const s = localStorage.getItem('shopmonitor_profit_'+pf);
+    if (!s) return;
+    const p = JSON.parse(s);
+    if (p.cost_rate!=null) document.getElementById('flCostRate').value = Math.round(p.cost_rate*100);
+    if (p.shipping!=null) document.getElementById('flShip').value = p.shipping;
+    if (p.acos!=null) document.getElementById('flAcos').value = Math.round(p.acos*100);
+    if (p.duty_rate!=null) document.getElementById('flDuty').value = Math.round(p.duty_rate*100);
+    if (p.return_rate!=null) document.getElementById('flReturn').value = Math.round(p.return_rate*100);
+  } catch(e){}
+}
+async function exportProfitTable(fmt){
+  fmt = fmt || 'xlsx';
+  const pf = document.getElementById('flPf').value;
+  const cat = document.getElementById('flCat').value.trim();
+  const pp = profitParams();
+  const q = ['platform='+pf, 'category='+encodeURIComponent(cat), 'fmt='+fmt,
+    'profit_cost_rate='+pp.cost_rate, 'profit_shipping='+pp.shipping, 'profit_acos='+pp.acos,
+    'profit_duty_rate='+pp.duty_rate, 'profit_return_rate='+pp.return_rate];
+  const pm = document.getElementById('flPriceMax').value;
+  const ms = document.getElementById('flMinSales').value;
+  const mr = document.getElementById('flMinRating').value;
+  const fpm = document.getElementById('flProfitMin').value;
+  if (pm) q.push('price_max='+pm);
+  if (ms) q.push('min_sales='+ms);
+  if (mr) q.push('min_rating='+mr);
+  if (fpm) q.push('profit_min='+fpm);
+  document.getElementById('flMsg').textContent = '导出中…';
+  try {
+    const r = await fetch('/api/v1/工具/筛选?'+q.join('&'));
+    if (!r.ok) throw new Error('导出失败');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '选品毛利表_'+pf+'.'+(fmt==='pdf'?'pdf':'xlsx');
+    document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('flMsg').textContent = '已导出选品毛利表（'+(fmt==='pdf'?'PDF':'Excel')+'）';
+  } catch(e){ document.getElementById('flMsg').textContent = '导出失败：'+e; }
+}
+async function exportComparePdf(){
+  const pf = document.getElementById('cmPf').value;
+  const ids = Array.from(document.querySelectorAll('.cmChk:checked')).map(c=>c.value);
+  if (!ids.length) { document.getElementById('cmMsg').textContent = '请先勾选商品'; return; }
+  const pp = profitParams();
+  const url = '/api/v1/报告/对比?fmt=pdf&platform=' + pf + '&product_ids=' + ids.join(',') + '&profit_cost_rate=' + pp.cost_rate + '&profit_shipping=' + pp.shipping + '&profit_acos=' + pp.acos;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('导出失败');
+    const blob = await r.blob();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '选品对比表_'+pf+'.pdf'; a.click();
+    document.getElementById('cmMsg').textContent = '已导出对比表 PDF';
+  } catch(e){ document.getElementById('cmMsg').textContent='导出失败：'+e; }
+}
+async function loadFilter(){
+  const pf = document.getElementById('flPf').value;
+  const cat = document.getElementById('flCat').value.trim();
+  let url = '/api/v1/工具/筛选?platform=' + pf + '&category=' + encodeURIComponent(cat);
+  const pm = document.getElementById('flPriceMax').value;
+  const ms = document.getElementById('flMinSales').value;
+  const mr = document.getElementById('flMinRating').value;
+  const cr = document.getElementById('flCostRate').value;
+  const fs = document.getElementById('flShip').value;
+  const fa = document.getElementById('flAcos').value;
+  const fd = document.getElementById('flDuty').value;
+  const fr = document.getElementById('flReturn').value;
+  const fpm = document.getElementById('flProfitMin').value;
+  if (pm) url += '&price_max=' + pm;
+  if (ms) url += '&min_sales=' + ms;
+  if (mr) url += '&min_rating=' + mr;
+  if (cr) url += '&profit_cost_rate=' + (parseFloat(cr)/100);
+  if (fs) url += '&profit_shipping=' + fs;
+  if (fa) url += '&profit_acos=' + (parseFloat(fa)/100);
+  if (fd) url += '&profit_duty_rate=' + (parseFloat(fd)/100);
+  if (fr) url += '&profit_return_rate=' + (parseFloat(fr)/100);
+  if (fpm) url += '&profit_min=' + fpm;
+  saveProfitPrefs(pf);
+  document.getElementById('flMsg').textContent = '筛选中…';
+  try {
+    const d = await j('GET', url);
+    const items = d.items || [];
+    const pr = d.estimated_profit_params||{};
+    document.getElementById('flList').innerHTML = items.map(x => {
+      const profitTxt = x.estimated_profit!=null ? ('<b style="color:' + (x.estimated_profit>=0?'var(--ok)':'var(--warn)') + '">毛利¥' + x.estimated_profit + '（' + x.estimated_margin + '%）</b>') : '毛利-';
+      return `<div class="row"><span title="${esc(x.title)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--accent2)" onclick="openDetail('${pf}','${esc(x.product_id)}')">${esc(x.title)}</span>` +
+      `<span class="muted">¥${x.price??'-'}｜销量${x.sales??'-'}｜评分${x.rating??'-'}｜潜力${x.score}｜${profitTxt}</span></div>`;
+    }).join('') || '<div class="muted">无符合条件商品</div>';
+    document.getElementById('flMsg').textContent = '命中 ' + items.length + ' 个（源：' + d.source + '，毛利按 佣金' + Math.round((pr.commission_rate||0)*100) + '%/成本' + Math.round((pr.cost_rate||0)*100) + '%/运费' + (pr.shipping||0) + '/ACOS' + Math.round((pr.acos||0)*100) + '% 估）';
+  } catch(e){ document.getElementById('flMsg').textContent = '筛选失败'; }
+}
+async function loadCmpList(){
+  const pf = document.getElementById('cmPf').value;
+  const cat = document.getElementById('cmCat').value.trim();
+  document.getElementById('cmMsg').textContent = '加载中…';
+  try {
+    const d = await j('GET','/api/v1/rank/' + pf + '?category=' + encodeURIComponent(cat) + '&limit=20');
+    window._cmpItems = d.items || [];
+    document.getElementById('cmList').innerHTML = (window._cmpItems).map((x,i) =>
+      `<div class="row"><label style="display:flex;gap:8px;align-items:center;flex:1;overflow:hidden"><input type="checkbox" class="cmChk" value="${esc(x.product_id)}"> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.title)}</span></label>` +
+      `<span class="muted">¥${x.price??'-'}｜销量${x.sales??'-'}</span></div>`
+    ).join('') || '<div class="muted">暂无商品</div>';
+    document.getElementById('cmMsg').textContent = '';
+  } catch(e){ document.getElementById('cmMsg').textContent = '加载失败'; }
+}
+async function doCompare(){
+  const pf = document.getElementById('cmPf').value;
+  const ids = Array.from(document.querySelectorAll('.cmChk:checked')).map(c=>c.value);
+  if (!ids.length) { document.getElementById('cmMsg').textContent = '请先勾选商品'; return; }
+  if (ids.length > 5) { document.getElementById('cmMsg').textContent = '最多对比 5 个'; return; }
+  document.getElementById('cmMsg').textContent = '对比中…';
+  try {
+    const pp = profitParams();
+    const rows = await j('GET','/api/v1/报告/对比?fmt=json&platform=' + pf + '&product_ids=' + ids.join(',') + '&profit_cost_rate=' + pp.cost_rate + '&profit_shipping=' + pp.shipping + '&profit_acos=' + pp.acos);
+    if (!Array.isArray(rows)) { document.getElementById('cmMsg').textContent = '对比失败'; return; }
+    const keys = ['title','price','sales','rating','review_count','shop_name','stock_status','promo_text','rank','url','estimated_profit','estimated_margin'];
+    const labels = {title:'标题',price:'价格',sales:'销量',rating:'评分',review_count:'评论数',shop_name:'店铺',stock_status:'库存',promo_text:'促销',rank:'排名',url:'链接',estimated_profit:'预估毛利',estimated_margin:'毛利率'};
+    document.getElementById('cmTable').innerHTML =
+      '<table class="tbl"><tr><th>指标</th>' + rows.map(r=>`<th>${esc(r.title||r.product_id||'?')}</th>`).join('') + '</tr>' +
+      keys.map(k => '<tr><th>' + labels[k] + '</th>' + rows.map(r => {
+        let v = r[k];
+        if (k==='url') v = v ? `<a class="link" href="${esc(v)}" target="_blank">打开</a>` : '-';
+        else if (k==='estimated_profit') v = (v===null||v===undefined) ? '-' : `<b style="color:${v>=0?'var(--ok)':'var(--warn)'}">¥${v}</b>`;
+        else if (k==='estimated_margin') v = (v===null||v===undefined) ? '-' : v+'%';
+        return `<td>${v===null||v===undefined?'-':esc(String(v))}</td>`;
+      }).join('') + '</tr>').join('') + '</table>';
+    document.getElementById('cmMsg').textContent = '对比完成（预估毛利按 成本'+Math.round(pp.cost_rate*100)+'%/运费'+pp.shipping+'/ACOS'+Math.round(pp.acos*100)+'% 估）';
+  } catch(e){ document.getElementById('cmMsg').textContent = '对比失败：' + e; }
+}
+async function loadWatchOverview(){
+  try {
+    const d = await j('GET','/api/v1/监控/关注总览');
+    const items = d.items || [];
+    document.getElementById('woMeta').textContent = '共 ' + items.length + ' 行';
+    document.getElementById('woTable').innerHTML = items.length ? 
+      '<table class="tbl"><tr><th>关注项</th><th>商品</th><th>最新价</th><th>销量</th><th>排名</th><th>库存</th><th>目标价</th></tr>' +
+      items.map(x => `<tr><td>${esc(x.platform)}·${esc(x.keyword||'')}</td><td title="${esc(x.product_id)}" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--accent2)" onclick="openDetail('${x.platform}','${esc(x.product_id)}')">${esc(x.title||x.product_id||'-')}</td><td>${x.price!=null?('¥'+x.price):'-'}</td><td>${x.sales??'-'}</td><td>${x.rank!=null?('第'+x.rank+'名'):'-'}</td><td>${esc(x.stock||'-')}</td><td>${x.target_price!=null?('¥'+x.target_price):'-'}</td></tr>`).join('') + '</table>'
+      : '<div class="muted">暂无（先添加关注并运行巡检）</div>';
+  } catch(e){}
+}
+async function openDetail(platform, pid){
+  if (!platform || !pid) { document.getElementById('dtMsg').textContent = '请填写平台与商品 ID'; return; }
+  document.getElementById('dtPf').value = platform;
+  document.getElementById('dtId').value = pid;
+  document.getElementById('dtMsg').textContent = '加载中…';
+  try {
+    const p = await j('GET','/api/v1/商品/' + platform + '/' + encodeURIComponent(pid));
+    const h = await j('GET','/api/v1/商品/' + platform + '/' + encodeURIComponent(pid) + '/历史?limit=60');
+    let chg = null;
+    try { chg = await j('GET','/api/v1/商品/' + platform + '/' + encodeURIComponent(pid) + '/涨跌'); } catch(e){}
+    const recs = (h.records||[]).slice().reverse();
+    const rows = [
+      ['标题', p.title||'-'], ['价格', p.price!=null?('¥'+p.price):'-'], ['原价', p.original_price!=null?('¥'+p.original_price):'-'],
+      ['促销', p.promo_text||'-'], ['库存', p.stock_status||'-'], ['销量', p.sales??'-'],
+      ['评分', p.rating??'-'], ['评论数', p.review_count??'-'], ['店铺', p.shop_name||'-'],
+      ['店铺评分', p.shop_rating??'-'], ['排名', p.rank!=null?('第'+p.rank+'名'):'-'], ['品牌', p.brand||'-'],
+    ];
+    let html2 = '<table class="tbl" style="margin-top:6px"><tr><th>字段</th><th>当前值</th></tr>' +
+      rows.map(r=>`<tr><td>${r[0]}</td><td>${esc(String(r[1]))}</td></tr>`).join('') + '</table>';
+    html2 = '<div class="form" style="flex-wrap:wrap;gap:8px">' +
+      `<button class="btn btn-s" onclick="pickProduct('${platform}','${esc(p.product_id)}','${encodeURIComponent(p.title||'')}','${p.price??''}')">收藏到选品库</button>` +
+      `<button class="btn btn-s" onclick="findSource('${encodeURIComponent(p.title||'')}')">1688 找同款</button>` +
+      `<button class="btn btn-s" onclick="watchProduct('${platform}','${esc(p.product_id)}','${encodeURIComponent(p.title||'')}')">监控此商品</button>` +
+      '</div>' + html2;
+    if (p.estimated_profit != null) {
+      const ec = p.estimated_profit>=0 ? 'var(--ok)' : 'var(--warn)';
+      html2 += '<div class="muted" style="margin-top:6px">预估毛利（成本40% / 运费¥8 / ACOS10%）：<b style="color:' + ec + '">' + (p.estimated_profit>=0?'+':'') + p.estimated_profit + ' 元（' + p.estimated_margin + '%）</b> <span class="muted">→ 可在「毛利计算器」精算</span></div>';
+    }
+    if (p.estimated_monthly_sales != null && p.estimated_gmv != null) {
+      const tag = p.sales_estimated ? '（按排名估算）' : '';
+      html2 += '<div class="muted" style="margin-top:4px">预估月销：<b>' + p.estimated_monthly_sales + '</b>' + tag + ' ｜ 预估月GMV：<b>¥' + p.estimated_gmv + '</b>（售价×月销）</div>';
+    }
+    if (chg && chg.note) html2 += '<div class="muted" style="margin-top:6px">涨跌：' + esc(chg.note) + '</div>';
+    if (recs.length) {
+      const maxP = Math.max(...recs.map(r=>Number(r.price)||0),1);
+      html2 += '<div style="margin-top:10px;font-weight:600">历史价格/销量/评分</div>' + recs.map(r=>{
+        const t=String(r.crawled_at||'').replace('T',' ').slice(5,16);
+        const w=Math.max(2,Math.round((Number(r.price)||0)/maxP*100));
+        return `<div class="trend-row"><span>${esc(t)}</span><span>¥${r.price!=null?r.price:'-'}</span><div class="trend-bar" style="width:${w}%"></div><span class="muted">${r.sales!=null?('销量'+r.sales):''} ${r.rating!=null?('评分'+r.rating):''}</span></div>`;
+      }).join('');
+    } else {
+      html2 += '<div class="muted" style="margin-top:8px">暂无历史（先拉一次榜单/商品自动记录）</div>';
+    }
+    if (p.url) html2 += '<div style="margin-top:8px"><a class="link" href="' + esc(p.url) + '" target="_blank">打开商品链接</a></div>';
+    document.getElementById('dtBox').innerHTML = html2;
+    document.getElementById('dtMsg').textContent = '';
+  } catch(e){ document.getElementById('dtMsg').textContent = '加载失败（商品可能未抓取过）'; }
+}
+async function loadHotTrend(){
+  const pf = document.getElementById('htPf').value;
+  const days = document.getElementById('htDays').value;
+  try {
+    const d = await j('GET','/api/v1/uumit/热搜趋势?platform=' + pf + '&days=' + days);
+    const items = d.items || [];
+    document.getElementById('htBox').innerHTML = items.length ?
+      items.map(x => {
+        const ch = x.change_pct;
+        const arrow = ch==null ? '' : (ch>0?'<span style="color:var(--warn)">▲'+ch+'%</span>':ch<0?'<span style="color:var(--ok)">▼'+Math.abs(ch)+'%</span>':'<span class="muted">→</span>');
+        return `<div class="row"><span>${esc(x.word)} <span class="muted">(${x.days}天)</span></span><span>热度${x.latest_heat??'-'} ${arrow}</span></div>`;
+      }).join('')
+      : '<div class="muted">暂无数据：先多拉几次热搜，隔天再来查看趋势。</div>';
+  } catch(e){ document.getElementById('htBox').textContent = '加载失败'; }
+}
+async function batchImport(){
+  const text = document.getElementById('biText').value;
+  const dp = document.getElementById('biPf').value;
+  if (!text.trim()) { document.getElementById('biMsg').textContent = '请粘贴商品链接/ID'; return; }
+  document.getElementById('biMsg').textContent = '导入中…';
+  try {
+    const d = await j('POST','/api/v1/监控/批量导入', {text:text, default_platform:dp});
+    let msg = '成功添加 ' + d.added + ' 个关注';
+    if (d.skipped_count) msg += '，跳过 ' + d.skipped_count + ' 个（无法识别）';
+    document.getElementById('biMsg').textContent = msg;
+    loadMonitor(); loadRtWatches(); loadWatchOverview();
+  } catch(e){ document.getElementById('biMsg').textContent = '导入失败：' + e; }
+}
+async function loadSettings(){
+  try {
+    const d = await j('GET','/api/v1/配置/状态');
+    document.getElementById('cfgRows').innerHTML = d.items.map(x =>
+      `<tr><td>${esc(x.name)}</td><td><span class="badge ${x.configured?'b-ok':'b-warn'}">${x.configured?'已配置':'未配置'}</span></td><td class="muted">${esc(x.note)}</td></tr>`
+    ).join('');
+  } catch(e){}
+  try {
+    const p = await j('GET','/api/v1/套餐/状态');
+    const l = p.limits || {};
+    document.getElementById('planInfo').textContent = p.plan.toUpperCase() + '（关注上限 ' + l.max_watches + '，已用 ' + p.usage.watches + '，AI ' + (p.ai_enabled?'开':'关') + '） ｜ ' + p.upgrade_hint;
+  } catch(e){}
+}
+async function loadNewArrivals(){
+  try {
+    const d = await j('GET','/api/v1/监控/新品榜?days=7');
+    const items = d.items || [];
+    document.getElementById('naMeta').textContent = '近 7 天 ' + items.length + ' 个';
+    document.getElementById('naList').innerHTML = items.map(x =>
+      `<div class="row"><span><span class="badge b-ok">新</span> ${esc(x.platform)}·${esc(x.keyword||'')}</span><span title="${esc(x.product_id)}" class="muted">${esc(x.product_id)}</span></div>`
+    ).join('') || '<div class="muted">近 7 天暂无新品上榜（先跑两轮巡检产生基线）</div>';
+  } catch(e){}
+}
+init();
+</script>
+</body>
+</html>

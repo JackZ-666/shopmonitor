@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# 本地数据 / 构建产物 / 敏感配置（绝不推送到公开仓库）
+data/
+*.db
+*.db-wal
+*.db-shm
+dist/
+webdata/
+assets/
+配置文件.env
+.env
+data/server.pid
+*.log
+
+# 系统
+.DS_Store
+Thumbs.db

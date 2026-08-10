@@ -1,0 +1,13 @@
+services:
+  shopmonitor:
+    build: .
+    container_name: shopmonitor
+    ports:
+      - "${SHOPMONITOR_PORT:-8000}:8000"
+    environment:
+      - SHOPMONITOR_MONITOR_INTERVAL=${SHOPMONITOR_MONITOR_INTERVAL:-3600}
+      - SHOPMONITOR_WEBHOOK_URL=${SHOPMONITOR_WEBHOOK_URL:-}
+      - SHOPMONITOR_ALLOW_MOCK=1
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
