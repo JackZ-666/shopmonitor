@@ -88,6 +88,10 @@ class JDUnionAdapter(PlatformAdapter):
     supports_search = True
     default_category = "手机"
     rate_limit_sec = 1.0
+    credential_keys = ("JD_UNION_APP_KEY", "JD_UNION_SECRET_KEY")
+
+    def is_configured(self) -> bool:
+        return bool(JD_UNION_APP_KEY and JD_UNION_SECRET_KEY)
 
     def rank_categories(self) -> List[str]:
         return ["手机", "电脑", "家电", "美妆", "食品", "母婴", "服饰"]
