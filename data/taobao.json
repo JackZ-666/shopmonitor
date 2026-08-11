@@ -146,5 +146,6 @@
   }
  ],
  "source": "预置",
+ "error": "未配置密钥: TAOBAO_APP_KEY, TAOBAO_APP_SECRET（在 GitHub Secrets 添加后重跑）",
  "note": "自动数据包（每日更新，GitHub Actions 生成）"
 }
