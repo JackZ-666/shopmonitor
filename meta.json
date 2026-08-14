@@ -6,7 +6,7 @@
  "platforms": {
   "jd": {
    "source": "预置",
-   "error": "官方API失败: 京东联盟响应缺少 responce 节点: {'error_response': {'code': '8', 'zh_desc': '时间戳参数与服务器时间差异大于设定值timestamp=2026-08-13 07:02:13.128+0800（解决方案参考: https://open.jd.com/v2/#/doc/guide?listId=533）', 'en_desc': 'Invalid"
+   "error": "官方API失败: 京东联盟响应缺少 responce 节点: {'error_response': {'code': '8', 'zh_desc': '时间戳参数与服务器时间差异大于设定值timestamp=2026-08-14 06:56:52.639+0800（解决方案参考: https://open.jd.com/v2/#/doc/guide?listId=533）', 'en_desc': 'Invalid"
   },
   "taobao": {
    "source": "预置",
